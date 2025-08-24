@@ -673,6 +673,11 @@ generate_realistic_market_data()
 generate_historical_data_from_real()
 print("✅ Market data initialization complete!")
 
+# Initialize symbol data for REST API
+print("🔄 Generating realistic market data...")
+step()
+print("✅ Market data initialization complete!")
+
 # WebSocket endpoint for real-time market data
 @app.websocket("/ws/nbbo")
 async def ws_nbbo(websocket: WebSocket):
@@ -691,9 +696,28 @@ async def ws_nbbo(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
+@app.get("/test/{symbol}")
+async def test_market_data(symbol: str):
+    """Simple test endpoint for market data"""
+    return {
+        "symbol": symbol,
+        "price": 150.0,
+        "change": 2.5,
+        "change_percent": 1.67,
+        "volume": 50000000,
+        "bid": 149.95,
+        "ask": 150.05,
+        "bid_sz": 1000,
+        "ask_sz": 1000
+    }
+
 # REST API endpoints
 @app.get("/market-data/{symbol}")
 async def get_market_data(symbol: str):
+    print(f"DEBUG: Requesting market data for {symbol}")
+    print(f"DEBUG: symbol_data keys: {list(symbol_data.keys())}")
+    if symbol in symbol_data:
+        print(f"DEBUG: symbol_data[{symbol}] keys: {list(symbol_data[symbol].keys())}")
     if symbol not in symbol_data or 'market_data' not in symbol_data[symbol]:
         return {"error": "Symbol not found"}
     return symbol_data[symbol]['market_data']

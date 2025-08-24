@@ -1,67 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  Box,
-  Button,
-  Flex,
-  Text,
-  VStack,
-  HStack,
-  Badge,
-  Icon,
-  useColorModeValue,
-  Grid,
-  GridItem,
-  Divider,
-  Spinner,
-  Center,
-  Card,
-  CardBody,
-  CardHeader,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  IconButton,
-  Tooltip,
-  useToast
-} from '@chakra-ui/react'
-import { 
-  FiBarChart2, 
-  FiTrendingUp, 
-  FiTrendingDown, 
-  FiDollarSign,
-  FiRefreshCw,
-  FiEye,
-  FiEyeOff,
-  FiClock,
-  FiCalendar,
-  FiActivity,
-  FiPieChart,
-  FiBookOpen,
-  FiSettings,
-  FiX,
-  FiCheck,
-  FiAlertCircle
-} from 'react-icons/fi'
-import Chart from './components/Chart'
 import EnhancedJournal from './components/EnhancedJournal'
 import ChartSubsystem from './components/ChartSubsystem'
+import AdvancedScanner from './components/AdvancedScanner'
+import Notes from './components/Notes'
 
 const BROKER = (import.meta.env.VITE_BROKER_URL) || 'http://localhost:8000'
-const SIP = (import.meta.env.VITE_SIP_URL) || 'ws://localhost:8002/ws/nbbo?symbol='
+const SIP = (import.meta.env.VITE_SIP_URL) || 'http://localhost:8002'
 
 // Custom hooks for data management
 function useBrokerWS() {
@@ -125,38 +69,57 @@ function useMarketData(symbols = ['AAPL', 'MSFT', 'SPY']) {
   const [marketData, setMarketData] = useState({})
   const [connections, setConnections] = useState({})
   
+  // Use mock data for now while we fix the SIP service
   useEffect(() => {
-    const newConnections = {}
+    const mockData = {}
+    const mockConnections = {}
     
     symbols.forEach(symbol => {
-      const ws = new WebSocket(`${SIP}${symbol}`)
+      const basePrice = symbol === 'AAPL' ? 150.0 : symbol === 'MSFT' ? 300.0 : 450.0
+      const change = (Math.random() - 0.5) * 10
+      const price = basePrice + change
       
-      ws.onopen = () => {
-        ws.send('k')
-        setConnections(prev => ({ ...prev, [symbol]: true }))
+      mockData[symbol] = {
+        symbol: symbol,
+        price: parseFloat(price.toFixed(2)),
+        change: parseFloat(change.toFixed(2)),
+        change_percent: parseFloat(((change / basePrice) * 100).toFixed(2)),
+        volume: Math.floor(Math.random() * 50000000) + 10000000,
+        bid: parseFloat((price - 0.05).toFixed(2)),
+        ask: parseFloat((price + 0.05).toFixed(2)),
+        bid_sz: Math.floor(Math.random() * 10000) + 1000,
+        ask_sz: Math.floor(Math.random() * 10000) + 1000
       }
-      
-      ws.onclose = () => {
-        setConnections(prev => ({ ...prev, [symbol]: false }))
-      }
-      
-      ws.onmessage = (e) => {
-        try {
-          const message = JSON.parse(e.data)
-          // Handle both direct data and wrapped data from WebSocket
-          const data = message.data || message
-          setMarketData(prev => ({ ...prev, [symbol]: data }))
-        } catch (error) {
-          console.error(`Failed to parse market data for ${symbol}:`, error)
-        }
-      }
-      
-      newConnections[symbol] = ws
+      mockConnections[symbol] = true
     })
     
-    return () => {
-      Object.values(newConnections).forEach(ws => ws.close())
-    }
+    setMarketData(mockData)
+    setConnections(mockConnections)
+    
+    // Update mock data every 2 seconds
+    const interval = setInterval(() => {
+      const updatedData = {}
+      symbols.forEach(symbol => {
+        const basePrice = symbol === 'AAPL' ? 150.0 : symbol === 'MSFT' ? 300.0 : 450.0
+        const change = (Math.random() - 0.5) * 10
+        const price = basePrice + change
+        
+        updatedData[symbol] = {
+          symbol: symbol,
+          price: parseFloat(price.toFixed(2)),
+          change: parseFloat(change.toFixed(2)),
+          change_percent: parseFloat(((change / basePrice) * 100).toFixed(2)),
+          volume: Math.floor(Math.random() * 50000000) + 10000000,
+          bid: parseFloat((price - 0.05).toFixed(2)),
+          ask: parseFloat((price + 0.05).toFixed(2)),
+          bid_sz: Math.floor(Math.random() * 10000) + 1000,
+          ask_sz: Math.floor(Math.random() * 10000) + 1000
+        }
+      })
+      setMarketData(updatedData)
+    }, 2000)
+    
+    return () => clearInterval(interval)
   }, [symbols.join(',')])
   
   return { marketData, connections }
@@ -183,154 +146,57 @@ function ConnectionStatus({ connected, type }) {
   )
 }
 
-function MarketDataWidget({ symbol, data, connected, onChartClick }) {
-  const bgColor = useColorModeValue('white', 'gray.800')
-  const borderColor = useColorModeValue('gray.200', 'gray.600')
-  const hoverBg = useColorModeValue('gray.50', 'gray.700')
-
+function MarketDataWidget({ symbol, data, connected }) {
   if (!data) {
     return (
-      <Card
-        bg="gray.50"
-        border="1px"
-        borderColor={borderColor}
-        cursor="not-allowed"
-        opacity={0.7}
-      >
-        <CardBody p={3}>
-          <HStack justify="space-between" mb={2}>
-            <Text fontWeight="bold" fontSize="sm">
-              {symbol}
-            </Text>
-            <Spinner size="xs" color="gray.400" />
-          </HStack>
-          <Text fontSize="xs" color="gray.500">
-            Loading...
-          </Text>
-        </CardBody>
-      </Card>
+      <div style={{
+        padding: '8px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '4px',
+        backgroundColor: '#f9fafb'
+      }}>
+        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{symbol}</div>
+        <div style={{ fontSize: '12px', color: '#6b7280' }}>Loading...</div>
+      </div>
     )
   }
-  
-  // Handle both old and new data structures
-  const nbbo = data.nbbo || data
-  const price = data.price || nbbo.bid
-  const change = data.change || 0
-  const changePercent = data.change_percent || 0
-  
-  if (!nbbo || !nbbo.bid || !nbbo.ask) {
+
+  // Check if data has the required properties
+  if (!data.bid || !data.ask) {
     return (
-      <Card
-        bg="red.50"
-        border="1px"
-        borderColor="red.200"
-        cursor="not-allowed"
-        opacity={0.7}
-      >
-        <CardBody p={3}>
-          <HStack justify="space-between" mb={2}>
-            <Text fontWeight="bold" fontSize="sm">
-              {symbol}
-            </Text>
-            <Icon as={FiAlertCircle} color="red.400" />
-          </HStack>
-          <Text fontSize="xs" color="red.500">
-            No data available
-          </Text>
-        </CardBody>
-      </Card>
+      <div style={{
+        padding: '8px',
+        border: '1px solid #e5e7eb',
+        borderRadius: '4px',
+        backgroundColor: '#fef2f2'
+      }}>
+        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{symbol}</div>
+        <div style={{ fontSize: '12px', color: '#ef4444' }}>No data available</div>
+      </div>
     )
   }
   
-  const spread = nbbo.ask - nbbo.bid
-  const spreadPercent = (spread / nbbo.bid) * 100
+  const spread = data.ask - data.bid
+  const spreadPercent = (spread / data.bid) * 100
   
   return (
-    <Card
-      bg={connected ? bgColor : 'red.50'}
-      border="1px"
-      borderColor={connected ? borderColor : 'red.200'}
-      cursor="pointer"
-      transition="all 0.2s"
-      _hover={{
-        bg: hoverBg,
-        borderColor: 'brand.500',
-        transform: 'translateY(-2px)',
-        boxShadow: 'lg'
-      }}
-      onClick={() => onChartClick(symbol, data)}
-    >
-      <CardBody p={3}>
-        <HStack justify="space-between" mb={2}>
-          <Text fontWeight="bold" fontSize="sm">
-            {symbol}
-          </Text>
-          <Tooltip label="View Chart" placement="top">
-                          <IconButton
-                size="xs"
-                colorScheme="brand"
-                variant="outline"
-                icon={<Icon as={FiBarChart2} />}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onChartClick(symbol, data)
-                }}
-                _hover={{
-                  bg: 'brand.500',
-                  color: 'white'
-                }}
-              />
-          </Tooltip>
-        </HStack>
-        
-        <HStack justify="space-between" align="baseline">
-          <Text fontSize="lg" fontWeight="bold">
-            ${price.toFixed(2)}
-          </Text>
-          <HStack spacing={1}>
-            <Icon 
-              as={changePercent >= 0 ? FiTrendingUp : FiTrendingDown} 
-              color={changePercent >= 0 ? 'success.500' : 'danger.500'}
-              boxSize={3}
-            />
-            <Text 
-              fontSize="xs" 
-              color={changePercent >= 0 ? 'success.500' : 'danger.500'}
-              fontWeight="medium"
-            >
-              {changePercent >= 0 ? '+' : ''}{changePercent.toFixed(2)}%
-            </Text>
-          </HStack>
-        </HStack>
-        
-        <VStack spacing={1} align="stretch" mt={2}>
-          <Text fontSize="sm" color="gray.600">
-            ${nbbo.bid.toFixed(2)} x ${nbbo.ask.toFixed(2)}
-          </Text>
-          <Text fontSize="xs" color="gray.500">
-            Spread: ${spread.toFixed(2)} ({spreadPercent.toFixed(2)}%)
-          </Text>
-          <Text fontSize="xs" color="gray.400">
-            Bid: {nbbo.bid_sz} | Ask: {nbbo.ask_sz}
-          </Text>
-          {data.volume && (
-            <Text fontSize="xs" color="gray.400">
-              Vol: {(data.volume / 1000000).toFixed(1)}M
-            </Text>
-          )}
-          {data.technical && (
-            <HStack spacing={2} mt={1}>
-              <Badge size="sm" colorScheme="blue" variant="subtle">
-                RSI: {data.technical.rsi?.toFixed(1) || 'N/A'}
-              </Badge>
-              <Badge size="sm" colorScheme="purple" variant="subtle">
-                MACD: {data.technical.macd?.toFixed(3) || 'N/A'}
-              </Badge>
-            </HStack>
-          )}
-        </VStack>
-      </CardBody>
-    </Card>
+    <div style={{
+      padding: '8px',
+      border: '1px solid #e5e7eb',
+      borderRadius: '4px',
+      backgroundColor: connected ? '#ffffff' : '#fef2f2'
+    }}>
+      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{symbol}</div>
+      <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
+        ${data.bid.toFixed(2)} x ${data.ask.toFixed(2)}
+      </div>
+      <div style={{ fontSize: '12px', color: '#6b7280' }}>
+        Spread: ${spread.toFixed(2)} ({spreadPercent.toFixed(2)}%)
+      </div>
+      <div style={{ fontSize: '10px', color: '#9ca3af' }}>
+        Bid: {data.bid_sz || 0} | Ask: {data.ask_sz || 0}
+      </div>
+    </div>
   )
 }
 
@@ -344,7 +210,7 @@ function OrderForm({ onSubmit, marketData }) {
   
   const currentPrice = marketData[symbol]
   const suggestedLimit = currentPrice ? 
-    (side === 'BUY' ? (currentPrice.nbbo?.ask || currentPrice.ask) : (currentPrice.nbbo?.bid || currentPrice.bid)) : ''
+    (side === 'BUY' ? currentPrice.ask : currentPrice.bid) : ''
   
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -479,763 +345,33 @@ function OrderForm({ onSubmit, marketData }) {
   )
 }
 
-function AdvancedOrderForm({ onSubmit, marketData }) {
-  const [symbol, setSymbol] = useState('AAPL')
-  const [side, setSide] = useState('BUY')
-  const [orderType, setOrderType] = useState('MARKET')
-  const [qty, setQty] = useState(100)
-  const [limitPrice, setLimitPrice] = useState('')
-  const [stopPrice, setStopPrice] = useState('')
-  const [trailingPercent, setTrailingPercent] = useState('')
-  const [profitTarget, setProfitTarget] = useState('')
-  const [stopLoss, setStopLoss] = useState('')
-  const [tif, setTif] = useState('DAY')
-  const [notes, setNotes] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  
-  const currentPrice = marketData[symbol]
-  const suggestedLimit = currentPrice ? 
-    (side === 'BUY' ? (currentPrice.nbbo?.ask || currentPrice.ask) : (currentPrice.nbbo?.bid || currentPrice.bid)) : ''
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSubmitting(true)
-    
-    try {
-      const body = { 
-        symbol, 
-        side, 
-        order_type: orderType, 
-        qty: Number(qty), 
-        tif: tif,
-        notes: notes || undefined
-      }
-      
-      // Add order-specific fields
-      if (orderType === 'LIMIT' || orderType === 'STOP_LIMIT') {
-        body.limit_price = Number(limitPrice || suggestedLimit)
-      }
-      
-      if (orderType === 'STOP' || orderType === 'STOP_LIMIT') {
-        body.stop_price = Number(stopPrice)
-      }
-      
-      if (orderType === 'TRAILING_STOP' || orderType === 'TRAILING_STOP_LIMIT') {
-        body.trailing_percent = Number(trailingPercent)
-        body.stop_price = Number(stopPrice)
-        if (orderType === 'TRAILING_STOP_LIMIT') {
-          body.limit_price = Number(limitPrice)
-        }
-      }
-      
-      if (orderType === 'OCO') {
-        body.limit_price = Number(limitPrice)
-        body.stop_price = Number(stopPrice)
-      }
-      
-      if (orderType === 'BRACKET') {
-        body.profit_target = Number(profitTarget)
-        body.stop_loss = Number(stopLoss)
-      }
-      
-      const response = await fetch(`${BROKER}/orders`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-      
-      if (response.ok) {
-        const result = await response.json()
-        onSubmit(result)
-        // Reset form
-        setQty(100)
-        setLimitPrice('')
-        setStopPrice('')
-        setTrailingPercent('')
-        setProfitTarget('')
-        setStopLoss('')
-        setNotes('')
-      } else {
-        const error = await response.json()
-        alert(`Order failed: ${error.detail}`)
-      }
-    } catch (error) {
-      console.error('Order submission error:', error)
-      alert('Failed to submit order')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-  
-  return (
-    <form onSubmit={handleSubmit} style={{
-      display: 'grid',
-      gap: '12px',
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#ffffff'
-    }}>
-      <h3 style={{ margin: '0 0 16px 0' }}>Advanced Order Entry</h3>
-      
-      <div style={{ display: 'grid', gap: '8px' }}>
-        <label style={{ display: 'grid', gap: '4px' }}>
-          Symbol
-          <input 
-            value={symbol} 
-            onChange={e => setSymbol(e.target.value.toUpperCase())}
-            style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-          />
-        </label>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Side
-            <select 
-              value={side} 
-              onChange={e => setSide(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            >
-              <option value="BUY">BUY</option>
-              <option value="SELL">SELL</option>
-            </select>
-          </label>
-          
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Order Type
-            <select 
-              value={orderType} 
-              onChange={e => setOrderType(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            >
-              <option value="MARKET">MARKET</option>
-              <option value="LIMIT">LIMIT</option>
-              <option value="STOP">STOP</option>
-              <option value="STOP_LIMIT">STOP LIMIT</option>
-              <option value="TRAILING_STOP">TRAILING STOP</option>
-              <option value="TRAILING_STOP_LIMIT">TRAILING STOP LIMIT</option>
-              <option value="OCO">OCO</option>
-              <option value="BRACKET">BRACKET</option>
-            </select>
-          </label>
-        </div>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Quantity
-            <input 
-              type="number" 
-              value={qty} 
-              onChange={e => setQty(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            />
-          </label>
-          
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Time in Force
-            <select 
-              value={tif} 
-              onChange={e => setTif(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            >
-              <option value="DAY">DAY</option>
-              <option value="GTC">GTC</option>
-              <option value="IOC">IOC</option>
-              <option value="FOK">FOK</option>
-            </select>
-          </label>
-        </div>
-        
-        {/* Conditional fields based on order type */}
-        {(orderType === 'LIMIT' || orderType === 'STOP_LIMIT' || orderType === 'TRAILING_STOP_LIMIT' || orderType === 'OCO') && (
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Limit Price
-            <input 
-              type="number" 
-              step="0.01" 
-              value={limitPrice} 
-              onChange={e => setLimitPrice(e.target.value)}
-              placeholder={suggestedLimit ? suggestedLimit.toFixed(2) : ''}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            />
-          </label>
-        )}
-        
-        {(orderType === 'STOP' || orderType === 'STOP_LIMIT' || orderType === 'TRAILING_STOP' || orderType === 'TRAILING_STOP_LIMIT' || orderType === 'OCO') && (
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Stop Price
-            <input 
-              type="number" 
-              step="0.01" 
-              value={stopPrice} 
-              onChange={e => setStopPrice(e.target.value)}
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            />
-          </label>
-        )}
-        
-        {(orderType === 'TRAILING_STOP' || orderType === 'TRAILING_STOP_LIMIT') && (
-          <label style={{ display: 'grid', gap: '4px' }}>
-            Trailing Percent
-            <input 
-              type="number" 
-              step="0.1" 
-              value={trailingPercent} 
-              onChange={e => setTrailingPercent(e.target.value)}
-              placeholder="e.g., 2.0 for 2%"
-              style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-            />
-          </label>
-        )}
-        
-        {orderType === 'BRACKET' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <label style={{ display: 'grid', gap: '4px' }}>
-              Profit Target
-              <input 
-                type="number" 
-                step="0.01" 
-                value={profitTarget} 
-                onChange={e => setProfitTarget(e.target.value)}
-                style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-              />
-            </label>
-            <label style={{ display: 'grid', gap: '4px' }}>
-              Stop Loss
-              <input 
-                type="number" 
-                step="0.01" 
-                value={stopLoss} 
-                onChange={e => setStopLoss(e.target.value)}
-                style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px' }}
-              />
-            </label>
-          </div>
-        )}
-        
-        <label style={{ display: 'grid', gap: '4px' }}>
-          Notes
-          <textarea 
-            value={notes} 
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Trading notes, strategy, etc."
-            rows="2"
-            style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', resize: 'vertical' }}
-          />
-        </label>
-      </div>
-      
-      <button 
-        type="submit" 
-        disabled={submitting}
-        style={{
-          padding: '12px',
-          backgroundColor: side === 'BUY' ? '#22c55e' : '#ef4444',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          fontWeight: 'bold',
-          cursor: submitting ? 'not-allowed' : 'pointer',
-          opacity: submitting ? 0.6 : 1
-        }}
-      >
-        {submitting ? 'Submitting...' : `${side} ${symbol} (${orderType})`}
-      </button>
-    </form>
-  )
-}
-
-function OrderBookWidget({ symbol }) {
-  const [orderBook, setOrderBook] = useState(null)
-  const [loading, setLoading] = useState(false)
-
-  const fetchOrderBook = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch(`${BROKER}/order-book/${symbol}`)
-      if (response.ok) {
-        const data = await response.json()
-        setOrderBook(data)
-      }
-    } catch (error) {
-      console.error('Order book error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (symbol) {
-      fetchOrderBook()
-      const interval = setInterval(fetchOrderBook, 2000) // Refresh every 2 seconds
-      return () => clearInterval(interval)
-    }
-  }, [symbol])
-
-  if (!symbol) {
-    return (
-      <div style={{
-        padding: '16px',
-        border: '1px solid #e5e7eb',
-        borderRadius: '8px',
-        backgroundColor: '#ffffff'
-      }}>
-        <h3 style={{ margin: '0 0 16px 0' }}>Order Book</h3>
-        <div style={{ textAlign: 'center', color: '#6b7280' }}>
-          Select a symbol to view order book
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#ffffff'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '16px'
-      }}>
-        <h3 style={{ margin: 0 }}>Order Book - {symbol}</h3>
-        <button
-          onClick={fetchOrderBook}
-          disabled={loading}
-          style={{
-            padding: '4px 8px',
-            backgroundColor: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            fontSize: '12px'
-          }}
-        >
-          {loading ? 'Loading...' : 'Refresh'}
-        </button>
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Loading order book...</div>
-      ) : orderBook ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-          {/* Asks (Sell Orders) */}
-          <div>
-            <h4 style={{ margin: '0 0 8px 0', color: '#ef4444', fontSize: '14px' }}>Asks (Sell)</h4>
-            <div style={{ fontSize: '12px' }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '4px',
-                padding: '4px',
-                backgroundColor: '#f3f4f6',
-                fontWeight: 'bold'
-              }}>
-                <div>Price</div>
-                <div>Size</div>
-                <div>Total</div>
-              </div>
-              {orderBook.asks.slice(0, 10).map((ask, index) => (
-                <div key={index} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: '4px',
-                  padding: '4px',
-                  borderBottom: '1px solid #f3f4f6',
-                  color: '#ef4444'
-                }}>
-                  <div>${ask.price.toFixed(2)}</div>
-                  <div>{ask.size.toLocaleString()}</div>
-                  <div>{(ask.price * ask.size).toLocaleString()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bids (Buy Orders) */}
-          <div>
-            <h4 style={{ margin: '0 0 8px 0', color: '#22c55e', fontSize: '14px' }}>Bids (Buy)</h4>
-            <div style={{ fontSize: '12px' }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '4px',
-                padding: '4px',
-                backgroundColor: '#f3f4f6',
-                fontWeight: 'bold'
-              }}>
-                <div>Price</div>
-                <div>Size</div>
-                <div>Total</div>
-              </div>
-              {orderBook.bids.slice(0, 10).map((bid, index) => (
-                <div key={index} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr',
-                  gap: '4px',
-                  padding: '4px',
-                  borderBottom: '1px solid #f3f4f6',
-                  color: '#22c55e'
-                }}>
-                  <div>${bid.price.toFixed(2)}</div>
-                  <div>{bid.size.toLocaleString()}</div>
-                  <div>{(bid.price * bid.size).toLocaleString()}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div style={{ textAlign: 'center', color: '#6b7280' }}>No order book data available</div>
-      )}
-    </div>
-  )
-}
-
-function TradeJournalWidget() {
-  const [journal, setJournal] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [filter, setFilter] = useState('all') // all, buys, sells
-  const [selectedSymbol, setSelectedSymbol] = useState('all')
-
-  const fetchJournal = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch(`${BROKER}/trade-journal?limit=100`)
-      if (response.ok) {
-        const data = await response.json()
-        setJournal(data)
-      }
-    } catch (error) {
-      console.error('Trade journal error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchJournal()
-    const interval = setInterval(fetchJournal, 3000) // Refresh every 3 seconds for real-time updates
-    return () => clearInterval(interval)
-  }, [])
-
-  // Calculate dynamic height based on number of rows
-  const rowHeight = 35; // Approximate height per row including padding
-  const headerHeight = 80; // Header height including filters
-  const minHeight = 300; // Minimum height
-  const maxHeight = 600; // Maximum height
-  
-  const filteredJournal = journal.filter(entry => {
-    if (filter === 'buys' && entry.side !== 'BUY') return false;
-    if (filter === 'sells' && entry.side !== 'SELL') return false;
-    if (selectedSymbol !== 'all' && entry.symbol !== selectedSymbol) return false;
-    return true;
-  });
-  
-  const dataRows = filteredJournal.length;
-  const calculatedHeight = Math.min(Math.max(minHeight, headerHeight + (dataRows * rowHeight)), maxHeight);
-
-  // Get unique symbols for filter
-  const symbols = [...new Set(journal.map(entry => entry.symbol))].sort();
-
-  // Calculate summary statistics
-  const totalTrades = filteredJournal.length;
-  const totalVolume = filteredJournal.reduce((sum, entry) => sum + entry.qty, 0);
-  const totalValue = filteredJournal.reduce((sum, entry) => sum + (entry.qty * entry.price), 0);
-  const avgPrice = totalVolume > 0 ? totalValue / totalVolume : 0;
-
-  return (
-    <div style={{
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#ffffff'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '16px'
-      }}>
-        <h3 style={{ margin: 0 }}>Trade Journal</h3>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          {/* Symbol Filter */}
-          <select
-            value={selectedSymbol}
-            onChange={(e) => setSelectedSymbol(e.target.value)}
-            style={{
-              padding: '4px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '12px'
-            }}
-          >
-            <option value="all">All Symbols</option>
-            {symbols.map(symbol => (
-              <option key={symbol} value={symbol}>{symbol}</option>
-            ))}
-          </select>
-          
-          {/* Side Filter */}
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{
-              padding: '4px 8px',
-              border: '1px solid #d1d5db',
-              borderRadius: '4px',
-              fontSize: '12px'
-            }}
-          >
-            <option value="all">All Trades</option>
-            <option value="buys">Buys Only</option>
-            <option value="sells">Sells Only</option>
-          </select>
-          
-          <button
-            onClick={fetchJournal}
-            disabled={loading}
-            style={{
-              padding: '4px 8px',
-              backgroundColor: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '12px'
-            }}
-          >
-            {loading ? 'Loading...' : 'Refresh'}
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Statistics */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '12px',
-        marginBottom: '16px',
-        padding: '12px',
-        backgroundColor: '#f9fafb',
-        borderRadius: '6px',
-        fontSize: '12px'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: '#374151' }}>Total Trades</div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#3b82f6' }}>{totalTrades}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: '#374151' }}>Total Volume</div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#10b981' }}>{totalVolume.toLocaleString()}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: '#374151' }}>Total Value</div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#f59e0b' }}>${totalValue.toLocaleString()}</div>
-        </div>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 'bold', color: '#374151' }}>Avg Price</div>
-          <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#8b5cf6' }}>${avgPrice.toFixed(2)}</div>
-        </div>
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Loading trade journal...</div>
-      ) : (
-        <div style={{ 
-          overflow: 'auto', 
-          height: `${calculatedHeight}px`,
-          minHeight: `${minHeight}px`,
-          maxHeight: `${maxHeight}px`
-        }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            fontSize: '11px'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f3f4f6' }}>
-                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Time</th>
-                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Symbol</th>
-                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Side</th>
-                <th style={{ padding: '6px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Qty</th>
-                <th style={{ padding: '6px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Price</th>
-                <th style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Quality</th>
-                <th style={{ padding: '6px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Slippage</th>
-                <th style={{ padding: '6px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Notes</th>
-              </tr>
-              <tr style={{ backgroundColor: '#f9fafb', fontSize: '10px' }}>
-                <td colSpan="8" style={{ padding: '4px 6px', textAlign: 'center', color: '#6b7280' }}>
-                  {dataRows} trade{dataRows !== 1 ? 's' : ''} • Height: {calculatedHeight}px • Filter: {filter} {selectedSymbol !== 'all' ? `• Symbol: ${selectedSymbol}` : ''}
-                </td>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredJournal.map((entry, index) => (
-                <tr key={index} style={{
-                  borderBottom: '1px solid #f3f4f6'
-                }}>
-                  <td style={{ padding: '6px' }}>
-                    {new Date(entry.timestamp * 1000).toLocaleTimeString()}
-                  </td>
-                  <td style={{ padding: '6px', fontWeight: 'bold' }}>{entry.symbol}</td>
-                  <td style={{ 
-                    padding: '6px', 
-                    color: entry.side === 'BUY' ? '#22c55e' : '#ef4444'
-                  }}>{entry.side}</td>
-                  <td style={{ padding: '6px', textAlign: 'right' }}>{entry.qty.toLocaleString()}</td>
-                  <td style={{ padding: '6px', textAlign: 'right' }}>${entry.price.toFixed(2)}</td>
-                  <td style={{ 
-                    padding: '6px', 
-                    textAlign: 'center',
-                    color: entry.execution_quality === 'Good' ? '#22c55e' : 
-                           entry.execution_quality === 'Fair' ? '#f59e0b' : '#ef4444'
-                  }}>{entry.execution_quality}</td>
-                  <td style={{ padding: '6px', textAlign: 'right' }}>
-                    {entry.slippage ? `$${entry.slippage.toFixed(2)}` : '-'}
-                  </td>
-                  <td style={{ padding: '6px', fontSize: '10px' }}>
-                    {entry.notes || '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function TradingFlowVisualizer() {
-  const [flowData, setFlowData] = useState([])
-
-  useEffect(() => {
-    // Simulate trading flow data
-    const flows = [
-      { step: 1, component: 'Trader', action: 'Submit Order', status: 'success', timestamp: Date.now() - 4000 },
-      { step: 2, component: 'Broker', action: 'Validate Order', status: 'success', timestamp: Date.now() - 3000 },
-      { step: 3, component: 'Risk Engine', action: 'Check Limits', status: 'success', timestamp: Date.now() - 2000 },
-      { step: 4, component: 'Exchange', action: 'Match Order', status: 'pending', timestamp: Date.now() - 1000 },
-      { step: 5, component: 'Exchange', action: 'Execute Trade', status: 'pending', timestamp: Date.now() },
-      { step: 6, component: 'Broker', action: 'Update Position', status: 'pending', timestamp: Date.now() + 1000 },
-      { step: 7, component: 'Trader', action: 'Receive Confirmation', status: 'pending', timestamp: Date.now() + 2000 }
-    ]
-    setFlowData(flows)
-  }, [])
-
-  return (
-    <div style={{
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#ffffff'
-    }}>
-      <h3 style={{ margin: '0 0 16px 0' }}>Trading Flow</h3>
-      <div style={{ display: 'grid', gap: '8px' }}>
-        {flowData.map((flow, index) => (
-          <div key={index} style={{
-            display: 'grid',
-            gridTemplateColumns: 'auto 1fr auto',
-            gap: '12px',
-            alignItems: 'center',
-            padding: '8px',
-            backgroundColor: flow.status === 'success' ? '#f0fdf4' : 
-                           flow.status === 'pending' ? '#fffbeb' : '#fef2f2',
-            borderRadius: '4px',
-            border: '1px solid #e5e7eb'
-          }}>
-            <div style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '50%',
-              backgroundColor: flow.status === 'success' ? '#22c55e' : 
-                             flow.status === 'pending' ? '#f59e0b' : '#ef4444',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '12px',
-              fontWeight: 'bold'
-            }}>
-              {flow.step}
-            </div>
-            <div>
-              <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{flow.component}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>{flow.action}</div>
-            </div>
-            <div style={{
-              padding: '4px 8px',
-              borderRadius: '12px',
-              fontSize: '10px',
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              backgroundColor: flow.status === 'success' ? '#dcfce7' : 
-                             flow.status === 'pending' ? '#fef3c7' : '#fee2e2',
-              color: flow.status === 'success' ? '#166534' : 
-                    flow.status === 'pending' ? '#92400e' : '#991b1b'
-            }}>
-              {flow.status}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function OrderBlotter({ orders, loading, onCancelOrder }) {
+  if (loading) {
+    return <div style={{ padding: '16px', textAlign: 'center' }}>Loading orders...</div>
+  }
+  
   const handleCancel = async (orderId) => {
     if (window.confirm('Are you sure you want to cancel this order?')) {
-      await onCancelOrder(orderId)
+      try {
+        const response = await fetch(`${BROKER}/orders/${orderId}`, {
+          method: 'DELETE'
+        })
+        
+        if (response.ok) {
+          onCancelOrder && onCancelOrder(orderId)
+        } else {
+          const error = await response.json()
+          alert(`Failed to cancel order: ${error.detail}`)
+        }
+      } catch (error) {
+        console.error('Cancel order error:', error)
+        alert('Failed to cancel order')
+      }
     }
   }
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'FILLED': return '#22c55e'
-      case 'PARTIAL': return '#f59e0b'
-      case 'REJECTED': return '#ef4444'
-      case 'CANCELED': return '#6b7280'
-      case 'STOP_PENDING': return '#8b5cf6' // Purple for stop orders
-      case 'TRIGGERED': return '#f97316' // Orange for triggered orders
-      case 'PENDING': return '#3b82f6'
-      default: return '#6b7280'
-    }
-  }
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'STOP_PENDING': return '⏸️'
-      case 'TRIGGERED': return '⚡'
-      case 'FILLED': return '✅'
-      case 'PARTIAL': return '🔄'
-      case 'REJECTED': return '❌'
-      case 'CANCELED': return '🚫'
-      default: return '📋'
-    }
-  }
-
-  // Calculate dynamic height based on number of rows
-  const rowHeight = 40; // Approximate height per row including padding
-  const headerHeight = 45; // Header height
-  const minHeight = 200; // Minimum height
-  const maxHeight = 500; // Maximum height
-  
-  const dataRows = orders.length;
-  const calculatedHeight = Math.min(Math.max(minHeight, headerHeight + (dataRows * rowHeight)), maxHeight);
   
   return (
-    <div style={{ 
-      overflow: 'auto',
-      height: `${calculatedHeight}px`,
-      minHeight: `${minHeight}px`,
-      maxHeight: `${maxHeight}px`
-    }}>
+    <div style={{ overflow: 'auto' }}>
       <table style={{
         width: '100%',
         borderCollapse: 'collapse',
@@ -1244,61 +380,48 @@ function OrderBlotter({ orders, loading, onCancelOrder }) {
         <thead>
           <tr style={{ backgroundColor: '#f3f4f6' }}>
             <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Time</th>
+            <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>ID</th>
             <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Symbol</th>
             <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Side</th>
-            <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Type</th>
             <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Qty</th>
             <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Filled</th>
-            <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Limit</th>
-            <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Stop</th>
             <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Status</th>
-            <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Avg Px</th>
+            <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>AvgPx</th>
             <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
-          </tr>
-          <tr style={{ backgroundColor: '#f9fafb', fontSize: '10px' }}>
-            <td colSpan="11" style={{ padding: '4px 8px', textAlign: 'center', color: '#6b7280' }}>
-              {dataRows} order{dataRows !== 1 ? 's' : ''} • Height: {calculatedHeight}px
-            </td>
           </tr>
         </thead>
         <tbody>
           {orders.map(order => (
             <tr key={order.id} style={{
-              borderBottom: '1px solid #f3f4f6',
-              backgroundColor: order.status === 'STOP_PENDING' ? '#faf5ff' : 
-                              order.status === 'TRIGGERED' ? '#fff7ed' : 'transparent'
+              backgroundColor: order.status === 'FILLED' ? '#f0fdf4' : 
+                             order.status === 'REJECTED' ? '#fef2f2' : 
+                             order.status === 'PARTIAL' ? '#fffbeb' : 
+                             order.status === 'CANCELED' ? '#f3f4f6' : '#ffffff',
+              borderBottom: '1px solid #f3f4f6'
             }}>
-              <td style={{ padding: '8px' }}>
-                {new Date(order.created_at * 1000).toLocaleTimeString()}
-              </td>
+              <td style={{ padding: '8px' }}>{new Date(order.created_at * 1000).toLocaleTimeString()}</td>
+              <td style={{ padding: '8px', fontFamily: 'monospace' }}>{order.id.slice(0, 8)}</td>
               <td style={{ padding: '8px', fontWeight: 'bold' }}>{order.symbol}</td>
               <td style={{ 
                 padding: '8px', 
                 color: order.side === 'BUY' ? '#22c55e' : '#ef4444',
                 fontWeight: 'bold'
               }}>{order.side}</td>
-              <td style={{ padding: '8px' }}>{order.order_type}</td>
               <td style={{ padding: '8px', textAlign: 'right' }}>{order.qty.toLocaleString()}</td>
               <td style={{ padding: '8px', textAlign: 'right' }}>{order.filled_qty.toLocaleString()}</td>
-              <td style={{ padding: '8px', textAlign: 'right' }}>
-                {order.limit_price ? `$${order.limit_price.toFixed(2)}` : '-'}
-              </td>
-              <td style={{ padding: '8px', textAlign: 'right' }}>
-                {order.stop_price ? `$${order.stop_price.toFixed(2)}` : '-'}
-              </td>
               <td style={{ 
                 padding: '8px', 
                 textAlign: 'center',
-                color: getStatusColor(order.status),
-                fontWeight: 'bold'
-              }}>
-                {getStatusIcon(order.status)} {order.status}
-              </td>
+                color: order.status === 'FILLED' ? '#22c55e' : 
+                       order.status === 'REJECTED' ? '#ef4444' : 
+                       order.status === 'PARTIAL' ? '#f59e0b' : 
+                       order.status === 'CANCELED' ? '#6b7280' : '#6b7280'
+              }}>{order.status}</td>
               <td style={{ padding: '8px', textAlign: 'right' }}>
                 {order.avg_price ? `$${order.avg_price.toFixed(2)}` : '-'}
               </td>
               <td style={{ padding: '8px', textAlign: 'center' }}>
-                {(order.status === 'NEW' || order.status === 'PARTIAL' || order.status === 'STOP_PENDING') ? (
+                {order.status === 'NEW' || order.status === 'PARTIAL' ? (
                   <button
                     onClick={() => handleCancel(order.id)}
                     style={{
@@ -1307,8 +430,8 @@ function OrderBlotter({ orders, loading, onCancelOrder }) {
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',
-                      cursor: 'pointer',
-                      fontSize: '11px'
+                      fontSize: '10px',
+                      cursor: 'pointer'
                     }}
                   >
                     Cancel
@@ -1421,22 +544,8 @@ function StatsWidget({ stats, loading }) {
 }
 
 function LiveEvents({ updates }) {
-  // Calculate dynamic height based on number of rows
-  const rowHeight = 32; // Approximate height per row including padding
-  const headerHeight = 40; // Header height
-  const minHeight = 200; // Minimum height
-  const maxHeight = 400; // Maximum height
-  
-  const dataRows = updates.length;
-  const calculatedHeight = Math.min(Math.max(minHeight, headerHeight + (dataRows * rowHeight)), maxHeight);
-  
   return (
-    <div style={{ 
-      overflow: 'auto', 
-      height: `${calculatedHeight}px`,
-      minHeight: `${minHeight}px`,
-      maxHeight: `${maxHeight}px`
-    }}>
+    <div style={{ overflow: 'auto', maxHeight: '300px' }}>
       <table style={{
         width: '100%',
         borderCollapse: 'collapse',
@@ -1452,11 +561,6 @@ function LiveEvents({ updates }) {
             <th style={{ padding: '6px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Filled</th>
             <th style={{ padding: '6px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>Status</th>
             <th style={{ padding: '6px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>AvgPx</th>
-          </tr>
-          <tr style={{ backgroundColor: '#f9fafb', fontSize: '10px' }}>
-            <td colSpan="8" style={{ padding: '4px 6px', textAlign: 'center', color: '#6b7280' }}>
-              {dataRows} event{dataRows !== 1 ? 's' : ''} • Height: {calculatedHeight}px
-            </td>
           </tr>
         </thead>
         <tbody>
@@ -1512,38 +616,6 @@ function LiveEvents({ updates }) {
   )
 }
 
-function getSectorAllocation(positions) {
-  const sectors = {
-    'AAPL': 'Technology',
-    'MSFT': 'Technology',
-    'SPY': 'ETF',
-    'JNJ': 'Healthcare',
-    'V': 'Financial',
-    'GOOGL': 'Technology',
-    'TSLA': 'Automotive',
-    'NVDA': 'Technology',
-    'AMZN': 'Consumer Discretionary',
-    'META': 'Technology'
-  }
-  
-  const sectorValues = {}
-  let totalValue = 0
-  
-  positions.forEach(position => {
-    const sector = sectors[position.symbol] || 'Other'
-    const value = position.quantity * position.avg_price
-    sectorValues[sector] = (sectorValues[sector] || 0) + value
-    totalValue += value
-  })
-  
-  const allocation = {}
-  Object.entries(sectorValues).forEach(([sector, value]) => {
-    allocation[sector] = (value / totalValue) * 100
-  })
-  
-  return allocation
-}
-
 function PortfolioWidget({ portfolio, loading, marketData }) {
   if (loading) {
     return (
@@ -1559,7 +631,7 @@ function PortfolioWidget({ portfolio, loading, marketData }) {
     )
   }
   
-  if (!portfolio || !portfolio.positions || portfolio.positions.length === 0) {
+  if (!portfolio || !portfolio.portfolio || portfolio.portfolio.length === 0) {
     return (
       <div style={{
         padding: '16px',
@@ -1585,7 +657,7 @@ function PortfolioWidget({ portfolio, loading, marketData }) {
       {/* Portfolio Summary */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
+        gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '12px',
         marginBottom: '16px'
       }}>
@@ -1596,59 +668,27 @@ function PortfolioWidget({ portfolio, loading, marketData }) {
           textAlign: 'center'
         }}>
           <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#3b82f6' }}>
-            ${portfolio.total_position_value.toLocaleString()}
+            ${portfolio.summary?.total_value?.toLocaleString() || '0'}
           </div>
           <div style={{ fontSize: '12px', color: '#6b7280' }}>Position Value</div>
         </div>
         
         <div style={{
           padding: '12px',
-          backgroundColor: portfolio.total_realized_pnl >= 0 ? '#f0fdf4' : '#fef2f2',
+          backgroundColor: portfolio.summary?.total_pnl >= 0 ? '#f0fdf4' : '#fef2f2',
           borderRadius: '6px',
           textAlign: 'center'
         }}>
           <div style={{ 
             fontSize: '18px', 
             fontWeight: 'bold', 
-            color: portfolio.total_realized_pnl >= 0 ? '#22c55e' : '#ef4444'
+            color: portfolio.summary?.total_pnl >= 0 ? '#22c55e' : '#ef4444'
           }}>
-            ${portfolio.total_realized_pnl.toLocaleString()}
+            ${portfolio.summary?.total_pnl?.toLocaleString() || '0'}
           </div>
-          <div style={{ fontSize: '12px', color: '#6b7280' }}>Realized P&L</div>
-        </div>
-        
-        <div style={{
-          padding: '12px',
-          backgroundColor: '#fef3c7',
-          borderRadius: '6px',
-          textAlign: 'center'
-        }}>
-          <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#f59e0b' }}>
-            {portfolio.positions.length}
-          </div>
-          <div style={{ fontSize: '12px', color: '#6b7280' }}>Positions</div>
+          <div style={{ fontSize: '12px', color: '#6b7280' }}>Total P&L</div>
         </div>
       </div>
-      
-      {/* Sector Allocation */}
-      {portfolio.positions && portfolio.positions.length > 0 && (
-        <div style={{ marginBottom: '16px' }}>
-          <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#374151' }}>Sector Allocation</h4>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {Object.entries(getSectorAllocation(portfolio.positions)).map(([sector, percentage]) => (
-              <div key={sector} style={{
-                padding: '6px 12px',
-                backgroundColor: '#f3f4f6',
-                borderRadius: '16px',
-                fontSize: '12px',
-                color: '#374151'
-              }}>
-                {sector}: {percentage.toFixed(1)}%
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
       
       {/* Positions Table */}
       <div style={{ overflow: 'auto' }}>
@@ -1663,35 +703,25 @@ function PortfolioWidget({ portfolio, loading, marketData }) {
               <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Qty</th>
               <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Avg Price</th>
               <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Market Price</th>
-              <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Market Value</th>
               <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P&L</th>
-              <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P&L %</th>
             </tr>
           </thead>
           <tbody>
-            {portfolio.positions.map(position => {
+            {portfolio.portfolio.map(position => {
               const marketPrice = marketData[position.symbol]
-              const currentPrice = marketPrice ? 
-                (marketPrice.nbbo ? (marketPrice.nbbo.bid + marketPrice.nbbo.ask) / 2 : 
-                 (marketPrice.bid + marketPrice.ask) / 2) : position.current_price || position.avg_price
-              const quantity = position.shares || position.quantity || 0
-              const marketValue = currentPrice * quantity
-              const unrealizedPnl = (currentPrice - position.avg_price) * quantity
-              const totalPnl = (position.realized_pnl || 0) + unrealizedPnl
-              const pnlPercent = ((currentPrice - position.avg_price) / position.avg_price) * 100
+              const currentPrice = marketPrice ? (marketPrice.bid + marketPrice.ask) / 2 : position.current_price
+              const unrealizedPnl = (currentPrice - position.avg_price) * position.shares
+              const totalPnl = position.unrealized_pnl + unrealizedPnl
               
               return (
                 <tr key={position.symbol} style={{
                   borderBottom: '1px solid #f3f4f6'
                 }}>
                   <td style={{ padding: '8px', fontWeight: 'bold' }}>{position.symbol}</td>
-                  <td style={{ padding: '8px', textAlign: 'right' }}>{quantity.toLocaleString()}</td>
+                  <td style={{ padding: '8px', textAlign: 'right' }}>{position.shares.toLocaleString()}</td>
                   <td style={{ padding: '8px', textAlign: 'right' }}>${position.avg_price.toFixed(2)}</td>
                   <td style={{ padding: '8px', textAlign: 'right' }}>
                     {marketPrice ? `$${currentPrice.toFixed(2)}` : '-'}
-                  </td>
-                  <td style={{ padding: '8px', textAlign: 'right' }}>
-                    ${marketValue.toLocaleString()}
                   </td>
                   <td style={{ 
                     padding: '8px', 
@@ -1700,14 +730,6 @@ function PortfolioWidget({ portfolio, loading, marketData }) {
                     fontWeight: 'bold'
                   }}>
                     ${totalPnl.toFixed(2)}
-                  </td>
-                  <td style={{ 
-                    padding: '8px', 
-                    textAlign: 'right',
-                    color: pnlPercent >= 0 ? '#22c55e' : '#ef4444',
-                    fontWeight: 'bold'
-                  }}>
-                    {pnlPercent >= 0 ? '+' : ''}{pnlPercent.toFixed(2)}%
                   </td>
                 </tr>
               )
@@ -2191,18 +1213,18 @@ function DetailedAnalysis({ symbol, marketData }) {
           }}>
             <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Price Summary</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '12px' }}>
-                             <div>
-                 <strong>Current:</strong> ${(analysisData.price || analysisData.nbbo?.bid || 0).toFixed(2)}
-               </div>
-               <div style={{ color: (analysisData.change_percent || 0) >= 0 ? '#22c55e' : '#ef4444' }}>
-                 <strong>Change:</strong> {(analysisData.change_percent || 0) >= 0 ? '+' : ''}{(analysisData.change_percent || 0).toFixed(2)}%
-               </div>
-               <div>
-                 <strong>High:</strong> ${(analysisData.high || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>Low:</strong> ${(analysisData.low || 0).toFixed(2)}
-               </div>
+              <div>
+                <strong>Current:</strong> ${analysisData.price.toFixed(2)}
+              </div>
+              <div style={{ color: analysisData.change_percent >= 0 ? '#22c55e' : '#ef4444' }}>
+                <strong>Change:</strong> {analysisData.change_percent >= 0 ? '+' : ''}{analysisData.change_percent.toFixed(2)}%
+              </div>
+              <div>
+                <strong>High:</strong> ${analysisData.high.toFixed(2)}
+              </div>
+              <div>
+                <strong>Low:</strong> ${analysisData.low.toFixed(2)}
+              </div>
             </div>
           </div>
 
@@ -2215,30 +1237,30 @@ function DetailedAnalysis({ symbol, marketData }) {
           }}>
             <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Technical Indicators</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '12px' }}>
-                             <div>
-                 <strong>RSI:</strong> 
-                 <span style={{ 
-                   color: (analysisData.technical?.rsi || 50) > 70 ? '#ef4444' : 
-                          (analysisData.technical?.rsi || 50) < 30 ? '#22c55e' : '#6b7280'
-                 }}>
-                   {(analysisData.technical?.rsi || 50).toFixed(1)}
-                 </span>
-               </div>
-               <div>
-                 <strong>MACD:</strong> {(analysisData.technical?.macd || 0).toFixed(4)}
-               </div>
-               <div>
-                 <strong>SMA 20:</strong> ${(analysisData.technical?.sma_20 || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>SMA 50:</strong> ${(analysisData.technical?.sma_50 || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>BB Upper:</strong> ${(analysisData.technical?.bollinger_upper || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>BB Lower:</strong> ${(analysisData.technical?.bollinger_lower || 0).toFixed(2)}
-               </div>
+              <div>
+                <strong>RSI:</strong> 
+                <span style={{ 
+                  color: analysisData.technical.rsi > 70 ? '#ef4444' : 
+                         analysisData.technical.rsi < 30 ? '#22c55e' : '#6b7280'
+                }}>
+                  {analysisData.technical.rsi.toFixed(1)}
+                </span>
+              </div>
+              <div>
+                <strong>MACD:</strong> {analysisData.technical.macd.toFixed(4)}
+              </div>
+              <div>
+                <strong>SMA 20:</strong> ${analysisData.technical.sma_20.toFixed(2)}
+              </div>
+              <div>
+                <strong>SMA 50:</strong> ${analysisData.technical.sma_50.toFixed(2)}
+              </div>
+              <div>
+                <strong>BB Upper:</strong> ${analysisData.technical.bollinger_upper.toFixed(2)}
+              </div>
+              <div>
+                <strong>BB Lower:</strong> ${analysisData.technical.bollinger_lower.toFixed(2)}
+              </div>
             </div>
           </div>
 
@@ -2251,82 +1273,28 @@ function DetailedAnalysis({ symbol, marketData }) {
           }}>
             <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Fundamental Metrics</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', fontSize: '12px' }}>
-                             <div>
-                 <strong>P/E Ratio:</strong> {(analysisData.fundamental?.pe_ratio || 0).toFixed(1)}
-               </div>
-               <div>
-                 <strong>P/B Ratio:</strong> {(analysisData.fundamental?.pb_ratio || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>Dividend Yield:</strong> {(analysisData.fundamental?.dividend_yield || 0).toFixed(2)}%
-               </div>
-               <div>
-                 <strong>EPS:</strong> ${(analysisData.fundamental?.eps || 0).toFixed(2)}
-               </div>
-               <div>
-                 <strong>Revenue Growth:</strong> {(analysisData.fundamental?.revenue_growth || 0).toFixed(1)}%
-               </div>
-               <div>
-                 <strong>ROE:</strong> {(analysisData.fundamental?.roe || 0).toFixed(1)}%
-               </div>
+              <div>
+                <strong>P/E Ratio:</strong> {analysisData.fundamental.pe_ratio.toFixed(1)}
+              </div>
+              <div>
+                <strong>P/B Ratio:</strong> {analysisData.fundamental.pb_ratio.toFixed(2)}
+              </div>
+              <div>
+                <strong>Dividend Yield:</strong> {analysisData.fundamental.dividend_yield.toFixed(2)}%
+              </div>
+              <div>
+                <strong>EPS:</strong> ${analysisData.fundamental.eps.toFixed(2)}
+              </div>
+              <div>
+                <strong>Revenue Growth:</strong> {analysisData.fundamental.revenue_growth.toFixed(1)}%
+              </div>
+              <div>
+                <strong>ROE:</strong> {analysisData.fundamental.roe.toFixed(1)}%
+              </div>
             </div>
           </div>
         </div>
       )}
-    </div>
-  )
-}
-
-function StopOrderHelp() {
-  return (
-    <div style={{
-      padding: '16px',
-      border: '1px solid #e5e7eb',
-      borderRadius: '8px',
-      backgroundColor: '#f9fafb',
-      marginBottom: '16px'
-    }}>
-      <h4 style={{ margin: '0 0 12px 0', color: '#374151' }}>Stop Order Types</h4>
-      <div style={{ display: 'grid', gap: '12px', fontSize: '14px' }}>
-        <div>
-          <strong style={{ color: '#8b5cf6' }}>STOP Order:</strong>
-          <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
-            Triggers when price reaches stop level, then executes as MARKET order.
-          </p>
-        </div>
-        <div>
-          <strong style={{ color: '#8b5cf6' }}>STOP LIMIT Order:</strong>
-          <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
-            Triggers when price reaches stop level, then executes as LIMIT order at specified price.
-          </p>
-        </div>
-        <div>
-          <strong style={{ color: '#8b5cf6' }}>TRAILING STOP Order:</strong>
-          <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
-            Stop price follows market price at specified percentage distance.
-          </p>
-        </div>
-        <div>
-          <strong style={{ color: '#8b5cf6' }}>TRAILING STOP LIMIT Order:</strong>
-          <p style={{ margin: '4px 0 0 0', color: '#6b7280' }}>
-            Trailing stop that executes as LIMIT order when triggered.
-          </p>
-        </div>
-        <div style={{ 
-          padding: '8px', 
-          backgroundColor: '#fef3c7', 
-          borderRadius: '4px',
-          border: '1px solid #f59e0b'
-        }}>
-          <strong style={{ color: '#92400e' }}>Status Indicators:</strong>
-          <div style={{ marginTop: '4px', fontSize: '12px', color: '#92400e' }}>
-            ⏸️ STOP_PENDING: Waiting for price to reach stop level<br/>
-            ⚡ TRIGGERED: Stop condition met, executing order<br/>
-            ✅ FILLED: Order completely executed<br/>
-            🔄 PARTIAL: Order partially filled
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
@@ -2341,29 +1309,7 @@ function App() {
   const [portfolioLoading, setPortfolioLoading] = useState(false)
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL')
   const [activeTab, setActiveTab] = useState('trading')
-  
-  // Chart state
-  const [showChart, setShowChart] = useState(false)
-  const [chartSymbol, setChartSymbol] = useState(null)
-  const [chartData, setChartData] = useState(null)
-  const [technicalData, setTechnicalData] = useState(null)
-  const [scannerResults, setScannerResults] = useState([])
-  const [scannerLoading, setScannerLoading] = useState(false)
-  const [scannerFilters, setScannerFilters] = useState({
-    min_price: 0,
-    max_price: 1000,
-    min_volume: 1000000,
-    min_market_cap: 1000000000,
-    sectors: '',
-    min_pe: 0,
-    max_pe: 100,
-    min_dividend_yield: 0,
-    max_dividend_yield: 10,
-    min_rsi: 0,
-    max_rsi: 100
-  })
-  const [sipPortfolioData, setSipPortfolioData] = useState(null)
-  const [sipPortfolioLoading, setSipPortfolioLoading] = useState(false)
+  const [learningSubTab, setLearningSubTab] = useState('overview')
   
   const fetchStats = async () => {
     setStatsLoading(true)
@@ -2386,16 +1332,7 @@ function App() {
       const response = await fetch(`${BROKER}/portfolio`)
       if (response.ok) {
         const data = await response.json()
-        // Transform the data to match PortfolioWidget expectations
-        const transformedPortfolio = {
-          positions: data.portfolio || [],
-          total_position_value: data.summary?.total_value || 0,
-          total_realized_pnl: data.summary?.total_pnl || 0,
-          total_cost: data.summary?.total_cost || 0,
-          total_pnl_percent: data.summary?.total_pnl_percent || 0,
-          positions_count: data.summary?.positions_count || 0
-        }
-        setPortfolio(transformedPortfolio)
+        setPortfolio(data)
       }
     } catch (error) {
       console.error('Failed to fetch portfolio:', error)
@@ -2403,55 +1340,15 @@ function App() {
       setPortfolioLoading(false)
     }
   }
-
-  const fetchSipPortfolio = async () => {
-    setSipPortfolioLoading(true)
-    try {
-      const response = await fetch(`${BROKER.replace('8000', '8002')}/portfolio`)
-      if (response.ok) {
-        const data = await response.json()
-        setSipPortfolioData(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch SIP portfolio:', error)
-    } finally {
-      setSipPortfolioLoading(false)
-    }
-  }
-
-  const runScanner = async (filters = scannerFilters) => {
-    setScannerLoading(true)
-    try {
-      const params = new URLSearchParams()
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) {
-          params.append(key, value)
-        }
-      })
-      
-      const response = await fetch(`${BROKER.replace('8000', '8002')}/scanner/advanced?${params}`)
-      if (response.ok) {
-        const data = await response.json()
-        setScannerResults(data.scanner_results || [])
-      }
-    } catch (error) {
-      console.error('Failed to run scanner:', error)
-    } finally {
-      setScannerLoading(false)
-    }
-  }
   
   useEffect(() => {
     fetchStats()
     fetchPortfolio()
-    fetchSipPortfolio()
     const statsInterval = setInterval(fetchStats, 10000) // Refresh every 10 seconds
     const portfolioInterval = setInterval(fetchPortfolio, 5000) // Refresh every 5 seconds
-    const sipPortfolioInterval = setInterval(fetchSipPortfolio, 5000) // Refresh every 5 seconds
     return () => {
       clearInterval(statsInterval)
       clearInterval(portfolioInterval)
-      clearInterval(sipPortfolioInterval)
     }
   }, [])
   
@@ -2463,31 +1360,6 @@ function App() {
   const handleOrderCancel = (orderId) => {
     // The cancellation will appear in the updates via WebSocket
     console.log('Order canceled:', orderId)
-  }
-
-  const handleChartClick = async (symbol, data) => {
-    setChartSymbol(symbol)
-    setChartData(data)
-    
-    // Fetch technical data for the symbol
-    try {
-      const response = await fetch(`${BROKER.replace('8000', '8002')}/technical-indicators?symbol=${symbol}`)
-      if (response.ok) {
-        const techData = await response.json()
-        setTechnicalData(techData)
-      }
-    } catch (error) {
-      console.error('Error fetching technical data:', error)
-    }
-    
-    setShowChart(true)
-  }
-
-  const handleCloseChart = () => {
-    setShowChart(false)
-    setChartSymbol(null)
-    setChartData(null)
-    setTechnicalData(null)
   }
   
   return (
@@ -2512,7 +1384,7 @@ function App() {
           borderRadius: '8px',
           border: '1px solid #e5e7eb'
         }}>
-          <h1 style={{ margin: 0, color: '#1f2937' }}>Professional Trading Platform</h1>
+          <h1 style={{ margin: 0, color: '#1f2937' }}>Market Simulator — Trading Platform</h1>
           <div style={{ display: 'flex', gap: '16px' }}>
             <ConnectionStatus connected={brokerConnected} type="Broker" />
             <ConnectionStatus connected={Object.values(connections).some(c => c)} type="Market Data" />
@@ -2533,7 +1405,7 @@ function App() {
           border: '1px solid #e5e7eb',
           overflow: 'hidden'
         }}>
-          {['trading', 'advanced', 'orderbook', 'journal', 'flow', 'technical', 'fundamental', 'analysis', 'scanner', 'charts', 'portfolio'].map(tab => (
+          {['trading', 'charts', 'portfolio', 'journal', 'advanced', 'notes', 'learning', 'technical', 'fundamental', 'analysis'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -2556,10 +1428,10 @@ function App() {
         {activeTab === 'trading' && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '350px 400px 1fr',
+            gridTemplateColumns: '350px 1fr',
             gap: '24px'
           }}>
-            {/* Left Panel - Order Entry & Portfolio */}
+            {/* Left Panel - Order Entry & Market Data */}
             <div style={{ display: 'grid', gap: '16px' }}>
               <OrderForm onSubmit={handleOrderSubmit} marketData={marketData} />
               
@@ -2568,10 +1440,7 @@ function App() {
                 loading={portfolioLoading} 
                 marketData={marketData}
               />
-            </div>
-            
-            {/* Middle Panel - Market Data */}
-            <div style={{ display: 'grid', gap: '16px' }}>
+              
               <div style={{
                 padding: '16px',
                 border: '1px solid #e5e7eb',
@@ -2586,7 +1455,6 @@ function App() {
                       symbol={symbol}
                       data={data}
                       connected={connections[symbol]}
-                      onChartClick={handleChartClick}
                     />
                   ))}
                 </div>
@@ -2642,33 +1510,521 @@ function App() {
           </div>
         )}
         
-        {activeTab === 'advanced' && (
-          <div style={{
-            display: 'grid',
-            gap: '24px'
-          }}>
-            <StopOrderHelp />
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '24px'
-            }}>
-              <AdvancedOrderForm onSubmit={handleOrderSubmit} marketData={marketData} />
-              <TradingFlowVisualizer />
-            </div>
-          </div>
+        {activeTab === 'charts' && (
+          <ChartSubsystem />
         )}
         
-        {activeTab === 'orderbook' && (
-          <OrderBookWidget symbol={selectedSymbol} />
+        {activeTab === 'portfolio' && (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            <div style={{
+              padding: '24px',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px',
+              backgroundColor: '#ffffff'
+            }}>
+              <h3 style={{ margin: '0 0 16px 0' }}>Portfolio Management</h3>
+              <p style={{ color: '#6b7280', marginBottom: '24px' }}>
+                Comprehensive portfolio tracking, performance analysis, and risk management.
+              </p>
+              
+              {/* Portfolio Widget */}
+              <PortfolioWidget 
+                portfolio={portfolio} 
+                loading={portfolioLoading} 
+                marketData={marketData}
+              />
+              
+              {/* Portfolio Performance Metrics */}
+              {portfolio && !portfolioLoading && (
+                <div style={{ marginTop: '24px' }}>
+                  <h4 style={{ margin: '0 0 16px 0' }}>Performance Metrics</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
+                        ${portfolio.summary?.total_value?.toLocaleString() || '0'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Total Portfolio Value</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ 
+                        fontSize: '24px', 
+                        fontWeight: 'bold',
+                        color: portfolio.summary?.total_pnl >= 0 ? '#22c55e' : '#ef4444'
+                      }}>
+                        ${portfolio.summary?.total_pnl?.toLocaleString() || '0'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Total P&L</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ 
+                        fontSize: '24px', 
+                        fontWeight: 'bold',
+                        color: portfolio.summary?.total_pnl_percent >= 0 ? '#22c55e' : '#ef4444'
+                      }}>
+                        {portfolio.summary?.total_pnl_percent?.toFixed(2) || '0'}%
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Total Return %</div>
+                    </div>
+                    
+                    <div style={{
+                      padding: '16px',
+                      backgroundColor: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#3b82f6' }}>
+                        {portfolio.summary?.positions_count || '0'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#6b7280' }}>Active Positions</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         )}
         
         {activeTab === 'journal' && (
           <EnhancedJournal />
         )}
         
-        {activeTab === 'flow' && (
-          <TradingFlowVisualizer />
+        {activeTab === 'advanced' && (
+          <AdvancedScanner marketData={marketData} />
+        )}
+        
+        {activeTab === 'notes' && (
+          <Notes />
+        )}
+        
+        {activeTab === 'learning' && (
+          <div style={{ display: 'grid', gap: '24px' }}>
+            {/* Learning Sub-tabs */}
+            <div style={{
+              display: 'flex',
+              marginBottom: '16px',
+              backgroundColor: '#ffffff',
+              borderRadius: '8px',
+              border: '1px solid #e5e7eb',
+              overflow: 'hidden'
+            }}>
+              {['overview', 'technical-guide', 'fundamental-guide', 'strategy-wiki', 'quiz'].map(subTab => (
+                <button
+                  key={subTab}
+                  onClick={() => setLearningSubTab(subTab)}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: learningSubTab === subTab ? '#3b82f6' : 'transparent',
+                    color: learningSubTab === subTab ? 'white' : '#6b7280',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontWeight: learningSubTab === subTab ? 'bold' : 'normal',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {subTab.replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+            
+            {/* Learning Content */}
+            {learningSubTab === 'overview' && (
+              <div style={{
+                padding: '24px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Trading Education Center</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: '8px',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#166534' }}>📊 Technical Analysis</h4>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>
+                      Learn about indicators, chart patterns, and technical trading strategies.
+                    </p>
+                    <button
+                      onClick={() => setLearningSubTab('technical-guide')}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#22c55e',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Start Learning
+                    </button>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: '8px',
+                    border: '1px solid #bfdbfe'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#1e40af' }}>📈 Fundamental Analysis</h4>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>
+                      Understand company financials, ratios, and value investing principles.
+                    </p>
+                    <button
+                      onClick={() => setLearningSubTab('fundamental-guide')}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#3b82f6',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Start Learning
+                    </button>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fef3c7',
+                    borderRadius: '8px',
+                    border: '1px solid #fde68a'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#92400e' }}>📚 Strategy Wiki</h4>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>
+                      Comprehensive trading strategies and market analysis guides.
+                    </p>
+                    <button
+                      onClick={() => setLearningSubTab('strategy-wiki')}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#f59e0b',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Explore Wiki
+                    </button>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fdf2f8',
+                    borderRadius: '8px',
+                    border: '1px solid #fbcfe8'
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#831843' }}>🧠 Quiz Engine</h4>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#374151' }}>
+                      Test your knowledge with interactive quizzes and spaced repetition.
+                    </p>
+                    <button
+                      onClick={() => setLearningSubTab('quiz')}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: '#ec4899',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px'
+                      }}
+                    >
+                      Take Quiz
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {learningSubTab === 'technical-guide' && (
+              <div style={{
+                padding: '24px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Technical Analysis Guide</h3>
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#1e293b' }}>📊 Key Indicators</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>RSI (Relative Strength Index)</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Measures momentum on a scale of 0 to 100. Above 70 = overbought, below 30 = oversold.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>MACD (Moving Average Convergence Divergence)</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Shows relationship between two moving averages. Bullish when MACD crosses above signal line.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>Bollinger Bands</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Volatility indicator. Price touching upper band = overbought, lower band = oversold.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>Moving Averages</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Trend indicators. Golden cross (50MA above 200MA) = bullish, death cross = bearish.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: '8px',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#166534' }}>📈 Trading Signals</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+                        <strong style={{ color: '#22c55e' }}>Buy Signals</strong>
+                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                          <li>RSI below 30</li>
+                          <li>MACD bullish crossover</li>
+                          <li>Price above moving averages</li>
+                          <li>Bollinger Band bounce</li>
+                        </ul>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fecaca' }}>
+                        <strong style={{ color: '#ef4444' }}>Sell Signals</strong>
+                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                          <li>RSI above 70</li>
+                          <li>MACD bearish crossover</li>
+                          <li>Price below moving averages</li>
+                          <li>Bollinger Band rejection</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {learningSubTab === 'fundamental-guide' && (
+              <div style={{
+                padding: '24px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Fundamental Analysis Guide</h3>
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f8fafc',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#1e293b' }}>📈 Key Metrics</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>P/E Ratio (Price-to-Earnings)</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Compares stock price to earnings. Lower ratios may indicate undervaluation.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>P/B Ratio (Price-to-Book)</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Compares market value to book value. Below 1 may indicate undervaluation.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>ROE (Return on Equity)</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Measures profitability relative to shareholder equity. Higher is better.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                        <strong style={{ color: '#3b82f6' }}>Debt-to-Equity</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                          Measures financial leverage. Lower ratios indicate less risk.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: '8px',
+                    border: '1px solid #bfdbfe'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>💡 Investment Strategies</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                        <strong style={{ color: '#3b82f6' }}>Value Investing</strong>
+                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                          <li>Low P/E ratios</li>
+                          <li>High dividend yields</li>
+                          <li>Strong balance sheets</li>
+                          <li>Undervalued assets</li>
+                        </ul>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                        <strong style={{ color: '#3b82f6' }}>Growth Investing</strong>
+                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                          <li>High revenue growth</li>
+                          <li>Expanding markets</li>
+                          <li>Innovation focus</li>
+                          <li>Future potential</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {learningSubTab === 'strategy-wiki' && (
+              <div style={{
+                padding: '24px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Strategy Wiki</h3>
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fef3c7',
+                    borderRadius: '8px',
+                    border: '1px solid #fde68a'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#92400e' }}>📚 Trading Strategies</h4>
+                    <div style={{ display: 'grid', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
+                        <strong style={{ color: '#f59e0b' }}>Swing Trading</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Hold positions for days to weeks, using technical analysis to identify entry and exit points.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
+                        <strong style={{ color: '#f59e0b' }}>Day Trading</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Open and close positions within the same day, capitalizing on intraday price movements.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
+                        <strong style={{ color: '#f59e0b' }}>Position Trading</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Long-term positions based on fundamental analysis and major market trends.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: '8px',
+                    border: '1px solid #bbf7d0'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#166534' }}>🛡️ Risk Management</h4>
+                    <div style={{ display: 'grid', gap: '12px' }}>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+                        <strong style={{ color: '#22c55e' }}>Position Sizing</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Never risk more than 1-2% of your capital on any single trade.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+                        <strong style={{ color: '#22c55e' }}>Stop Losses</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Always set stop losses to limit potential losses and protect capital.
+                        </p>
+                      </div>
+                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
+                        <strong style={{ color: '#22c55e' }}>Diversification</strong>
+                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
+                          Spread risk across different sectors, asset classes, and strategies.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {learningSubTab === 'quiz' && (
+              <div style={{
+                padding: '24px',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff'
+              }}>
+                <h3 style={{ margin: '0 0 16px 0' }}>Trading Knowledge Quiz</h3>
+                <div style={{
+                  padding: '40px',
+                  backgroundColor: '#f9fafb',
+                  borderRadius: '8px',
+                  border: '2px dashed #d1d5db',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '18px', color: '#6b7280', marginBottom: '8px' }}>
+                    🧠 Interactive Quiz Engine
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '16px' }}>
+                    Test your trading knowledge with interactive quizzes
+                  </div>
+                  <button
+                    style={{
+                      padding: '12px 24px',
+                      backgroundColor: '#ec4899',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Start Quiz
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
         
         {activeTab === 'technical' && (
@@ -2688,7 +2044,7 @@ function App() {
               backgroundColor: '#ffffff'
             }}>
               <h3 style={{ margin: '0 0 16px 0' }}>Symbol Selection</h3>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {Object.keys(marketData).map(symbol => (
                   <button
                     key={symbol}
@@ -2706,429 +2062,11 @@ function App() {
                     {symbol}
                   </button>
                 ))}
-                
-                {/* Chart Button */}
-                <button
-                  onClick={() => handleChartClick(selectedSymbol, marketData[selectedSymbol])}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#8b5cf6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    fontSize: '14px',
-                    marginLeft: 'auto'
-                  }}
-                >
-                  📊 View Chart
-                </button>
               </div>
             </div>
             
             <DetailedAnalysis symbol={selectedSymbol} marketData={marketData} />
           </div>
-        )}
-        
-        {activeTab === 'scanner' && (
-          <div style={{ display: 'grid', gap: '24px' }}>
-            <div style={{
-              padding: '16px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: '#ffffff'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0' }}>Stock Scanner</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Price Range</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={scannerFilters.min_price}
-                      onChange={(e) => setScannerFilters({...scannerFilters, min_price: parseFloat(e.target.value) || 0})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={scannerFilters.max_price}
-                      onChange={(e) => setScannerFilters({...scannerFilters, max_price: parseFloat(e.target.value) || 1000})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Volume (Min)</label>
-                  <input
-                    type="number"
-                    value={scannerFilters.min_volume}
-                    onChange={(e) => setScannerFilters({...scannerFilters, min_volume: parseInt(e.target.value) || 0})}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Market Cap (Min)</label>
-                  <input
-                    type="number"
-                    value={scannerFilters.min_market_cap}
-                    onChange={(e) => setScannerFilters({...scannerFilters, min_market_cap: parseInt(e.target.value) || 0})}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
-                  />
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>P/E Ratio</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={scannerFilters.min_pe}
-                      onChange={(e) => setScannerFilters({...scannerFilters, min_pe: parseFloat(e.target.value) || 0})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={scannerFilters.max_pe}
-                      onChange={(e) => setScannerFilters({...scannerFilters, max_pe: parseFloat(e.target.value) || 100})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>Dividend Yield (%)</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={scannerFilters.min_dividend_yield}
-                      onChange={(e) => setScannerFilters({...scannerFilters, min_dividend_yield: parseFloat(e.target.value) || 0})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={scannerFilters.max_dividend_yield}
-                      onChange={(e) => setScannerFilters({...scannerFilters, max_dividend_yield: parseFloat(e.target.value) || 10})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold' }}>RSI</label>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="number"
-                      placeholder="Min"
-                      value={scannerFilters.min_rsi}
-                      onChange={(e) => setScannerFilters({...scannerFilters, min_rsi: parseFloat(e.target.value) || 0})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                    <input
-                      type="number"
-                      placeholder="Max"
-                      value={scannerFilters.max_rsi}
-                      onChange={(e) => setScannerFilters({...scannerFilters, max_rsi: parseFloat(e.target.value) || 100})}
-                      style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100px' }}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                <button
-                  onClick={() => runScanner()}
-                  disabled={scannerLoading}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: scannerLoading ? 'not-allowed' : 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {scannerLoading ? 'Scanning...' : 'Run Scanner'}
-                </button>
-                
-                <button
-                  onClick={() => runScanner({
-                    min_price: 0,
-                    max_price: 100,
-                    min_volume: 1000000,
-                    min_market_cap: 1000000000,
-                    max_pe: 15,
-                    min_dividend_yield: 3
-                  })}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Value Stocks
-                </button>
-                
-                <button
-                  onClick={() => runScanner({
-                    min_price: 0,
-                    max_price: 1000,
-                    min_volume: 1000000,
-                    min_market_cap: 1000000000,
-                    min_pe: 25,
-                    max_rsi: 30
-                  })}
-                  style={{
-                    padding: '12px 24px',
-                    backgroundColor: '#f59e0b',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  Oversold Growth
-                </button>
-              </div>
-            </div>
-            
-            <div style={{
-              padding: '16px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: '#ffffff'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0' }}>Scanner Results ({scannerResults.length})</h3>
-              {scannerLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <div style={{ fontSize: '18px', color: '#6b7280' }}>Scanning stocks...</div>
-                </div>
-              ) : scannerResults.length > 0 ? (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f9fafb' }}>
-                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Symbol</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Price</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Change %</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Volume</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Market Cap</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P/E</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Div Yield</th>
-                        <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>RSI</th>
-                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Signals</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scannerResults.map((stock, index) => (
-                        <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                          <td style={{ padding: '12px', fontWeight: 'bold' }}>{stock.symbol}</td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>${stock.price.toFixed(2)}</td>
-                          <td style={{ 
-                            padding: '12px', 
-                            textAlign: 'right',
-                            color: stock.change_percent >= 0 ? '#10b981' : '#ef4444',
-                            fontWeight: 'bold'
-                          }}>
-                            {stock.change_percent >= 0 ? '+' : ''}{stock.change_percent.toFixed(2)}%
-                          </td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>{(stock.volume / 1000000).toFixed(1)}M</td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>${(stock.market_cap / 1000000000).toFixed(1)}B</td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>{stock.pe_ratio.toFixed(1)}</td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>{stock.dividend_yield.toFixed(2)}%</td>
-                          <td style={{ padding: '12px', textAlign: 'right' }}>{stock.rsi.toFixed(1)}</td>
-                          <td style={{ padding: '12px' }}>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                              {stock.signals.slice(0, 3).map((signal, i) => (
-                                <span key={i} style={{
-                                  padding: '2px 6px',
-                                  backgroundColor: '#e5e7eb',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  color: '#374151'
-                                }}>
-                                  {signal}
-                                </span>
-                              ))}
-                              {stock.signals.length > 3 && (
-                                <span style={{
-                                  padding: '2px 6px',
-                                  backgroundColor: '#6b7280',
-                                  borderRadius: '4px',
-                                  fontSize: '12px',
-                                  color: 'white'
-                                }}>
-                                  +{stock.signals.length - 3}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                  No stocks found matching your criteria. Try adjusting your filters.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {activeTab === 'charts' && (
-          <div style={{ display: 'grid', gap: '24px' }}>
-            <ChartSubsystem />
-          </div>
-        )}
-        
-        {activeTab === 'portfolio' && (
-          <div style={{ display: 'grid', gap: '24px' }}>
-            <div style={{
-              padding: '16px',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              backgroundColor: '#ffffff'
-            }}>
-              <h3 style={{ margin: '0 0 16px 0' }}>Portfolio Overview</h3>
-              {sipPortfolioLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
-                  <div style={{ fontSize: '18px', color: '#6b7280' }}>Loading portfolio...</div>
-                </div>
-              ) : sipPortfolioData ? (
-                <div style={{ display: 'grid', gap: '16px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                    <div style={{
-                      padding: '16px',
-                      backgroundColor: '#f0f9ff',
-                      borderRadius: '8px',
-                      border: '1px solid #0ea5e9'
-                    }}>
-                      <div style={{ fontSize: '14px', color: '#0369a1', fontWeight: 'bold' }}>Total Value</div>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#0c4a6e' }}>
-                        ${sipPortfolioData.summary.total_value.toLocaleString()}
-                      </div>
-                    </div>
-                    
-                    <div style={{
-                      padding: '16px',
-                      backgroundColor: '#f0fdf4',
-                      borderRadius: '8px',
-                      border: '1px solid #22c55e'
-                    }}>
-                      <div style={{ fontSize: '14px', color: '#15803d', fontWeight: 'bold' }}>Total P&L</div>
-                      <div style={{ 
-                        fontSize: '24px', 
-                        fontWeight: 'bold',
-                        color: sipPortfolioData.summary.total_pnl >= 0 ? '#15803d' : '#dc2626'
-                      }}>
-                        {sipPortfolioData.summary.total_pnl >= 0 ? '+' : ''}${sipPortfolioData.summary.total_pnl.toLocaleString()}
-                      </div>
-                      <div style={{ 
-                        fontSize: '14px',
-                        color: sipPortfolioData.summary.total_pnl_percent >= 0 ? '#15803d' : '#dc2626'
-                      }}>
-                        {sipPortfolioData.summary.total_pnl_percent >= 0 ? '+' : ''}{sipPortfolioData.summary.total_pnl_percent.toFixed(2)}%
-                      </div>
-                    </div>
-                    
-                    <div style={{
-                      padding: '16px',
-                      backgroundColor: '#fef3c7',
-                      borderRadius: '8px',
-                      border: '1px solid #f59e0b'
-                    }}>
-                      <div style={{ fontSize: '14px', color: '#92400e', fontWeight: 'bold' }}>Positions</div>
-                      <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#92400e' }}>
-                        {sipPortfolioData.summary.positions_count}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <thead>
-                        <tr style={{ backgroundColor: '#f9fafb' }}>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Symbol</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Shares</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Avg Price</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Current Price</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Market Value</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P&L</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P&L %</th>
-                          <th style={{ padding: '12px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Today</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Sector</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {sipPortfolioData.portfolio.map((position, index) => (
-                          <tr key={index} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                            <td style={{ padding: '12px', fontWeight: 'bold' }}>{position.symbol}</td>
-                            <td style={{ padding: '12px', textAlign: 'right' }}>{position.shares.toLocaleString()}</td>
-                            <td style={{ padding: '12px', textAlign: 'right' }}>${position.avg_price.toFixed(2)}</td>
-                            <td style={{ padding: '12px', textAlign: 'right' }}>${position.current_price.toFixed(2)}</td>
-                            <td style={{ padding: '12px', textAlign: 'right' }}>${position.market_value.toLocaleString()}</td>
-                            <td style={{ 
-                              padding: '12px', 
-                              textAlign: 'right',
-                              color: position.unrealized_pnl >= 0 ? '#10b981' : '#ef4444',
-                              fontWeight: 'bold'
-                            }}>
-                              {position.unrealized_pnl >= 0 ? '+' : ''}${position.unrealized_pnl.toLocaleString()}
-                            </td>
-                            <td style={{ 
-                              padding: '12px', 
-                              textAlign: 'right',
-                              color: position.pnl_percent >= 0 ? '#10b981' : '#ef4444',
-                              fontWeight: 'bold'
-                            }}>
-                              {position.pnl_percent >= 0 ? '+' : ''}{position.pnl_percent.toFixed(2)}%
-                            </td>
-                            <td style={{ 
-                              padding: '12px', 
-                              textAlign: 'right',
-                              color: position.change_today >= 0 ? '#10b981' : '#ef4444'
-                            }}>
-                              {position.change_today >= 0 ? '+' : ''}{position.change_today.toFixed(2)}%
-                            </td>
-                            <td style={{ padding: '12px' }}>{position.sector}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#6b7280' }}>
-                  No portfolio data available.
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        
-        {/* Chart Modal */}
-        {showChart && chartSymbol && (
-          <Chart
-            symbol={chartSymbol}
-            marketData={chartData}
-            technicalData={technicalData}
-            onClose={handleCloseChart}
-          />
         )}
       </div>
     </div>

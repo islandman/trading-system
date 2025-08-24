@@ -1,0 +1,71 @@
+{
+  "portfolio": [
+    {
+      "symbol": "AAPL",
+      "shares": 100,
+      "avg_price": 145.5,
+      "current_price": 0,
+      "market_value": 0,
+      "cost_basis": 14550.0,
+      "unrealized_pnl": -14550.0,
+      "pnl_percent": -100.0,
+      "sector": "Technology",
+      "change_today": 0
+    },
+    {
+      "symbol": "MSFT",
+      "shares": 50,
+      "avg_price": 295.0,
+      "current_price": 0,
+      "market_value": 0,
+      "cost_basis": 14750.0,
+      "unrealized_pnl": -14750.0,
+      "pnl_percent": -100.0,
+      "sector": "Technology",
+      "change_today": 0
+    },
+    {
+      "symbol": "SPY",
+      "shares": 200,
+      "avg_price": 440.0,
+      "current_price": 0,
+      "market_value": 0,
+      "cost_basis": 88000.0,
+      "unrealized_pnl": -88000.0,
+      "pnl_percent": -100.0,
+      "sector": "ETF",
+      "change_today": 0
+    },
+    {
+      "symbol": "JNJ",
+      "shares": 75,
+      "avg_price": 155.0,
+      "current_price": 0,
+      "market_value": 0,
+      "cost_basis": 11625.0,
+      "unrealized_pnl": -11625.0,
+      "pnl_percent": -100.0,
+      "sector": "Healthcare",
+      "change_today": 0
+    },
+    {
+      "symbol": "V",
+      "shares": 60,
+      "avg_price": 210.0,
+      "current_price": 0,
+      "market_value": 0,
+      "cost_basis": 12600.0,
+      "unrealized_pnl": -12600.0,
+      "pnl_percent": -100.0,
+      "sector": "Financial",
+      "change_today": 0
+    }
+  ],
+  "summary": {
+    "total_value": 0,
+    "total_cost": 141525.0,
+    "total_pnl": -141525.0,
+    "total_pnl_percent": -100.0,
+    "positions_count": 5
+  }
+}

@@ -666,7 +666,7 @@ async def place_order(order_in: OrderIn):
             
             # Broadcast NEW status
             await ws_manager.broadcast({"type": "order_update", "data": order.model_dump()})
-                
+        
         return order
         
     except HTTPException:
@@ -977,21 +977,21 @@ async def exec_report(request: Request):
             o = store.orders.get(er.order_id)
             if not o:
                 raise HTTPException(status_code=404, detail="Unknown order for exec")
-            
+                
             # Update order
             o.filled_qty += er.qty
             o.leaves_qty = max(0, o.qty - o.filled_qty)
-            
+                
             # Calculate average price
             if o.avg_price is None:
                 o.avg_price = er.price
             else:
                 o.avg_price = round((o.avg_price * (o.filled_qty - er.qty) + er.price * er.qty) / o.filled_qty, 6)
-            
+                
             o.status = er.status
             o.message = er.message
             o.last_modified = time.time()
-            
+                
             # Add to execution log
             o.execution_log.append({
                 "timestamp": er.execution_time,
@@ -999,7 +999,7 @@ async def exec_report(request: Request):
                 "qty": er.qty,
                 "venue": er.venue
             })
-            
+                
             # Add order book snapshot
             if er.order_book_snapshot:
                 o.order_book_snapshots.append(er.order_book_snapshot)

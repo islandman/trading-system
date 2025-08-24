@@ -1,0 +1,15 @@
+{
+  "total_exposure": 0.0,
+  "sector_exposure": {
+    "Technology": 0.4,
+    "Finance": 0.3,
+    "Healthcare": 0.2,
+    "Other": 0.1
+  },
+  "position_concentration": 0.0,
+  "daily_pnl": 0.0,
+  "max_drawdown": 0.05,
+  "sharpe_ratio": 1.2,
+  "var_95": 0.0,
+  "beta": 1.0
+}
