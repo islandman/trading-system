@@ -1,0 +1,44 @@
+[
+  {
+    "symbol": "SPY",
+    "quantity": 100,
+    "avg_price": 194.96999999999997,
+    "market_value": 0.0,
+    "unrealized_pnl": 0.0,
+    "realized_pnl": 0.0,
+    "total_pnl": 0.0,
+    "cost_basis": 19496.999999999996,
+    "last_updated": 1756065541.960281,
+    "position_history": [
+      {
+        "timestamp": 1756065541.9602888,
+        "action": "BUY",
+        "qty": 100,
+        "price": 194.96999999999997,
+        "quantity": 100,
+        "avg_price": 194.96999999999997
+      }
+    ]
+  },
+  {
+    "symbol": "V",
+    "quantity": 100,
+    "avg_price": 216.075,
+    "market_value": 0.0,
+    "unrealized_pnl": 0.0,
+    "realized_pnl": 0.0,
+    "total_pnl": 0.0,
+    "cost_basis": 21607.5,
+    "last_updated": 1756066828.7719471,
+    "position_history": [
+      {
+        "timestamp": 1756066828.7719562,
+        "action": "BUY",
+        "qty": 100,
+        "price": 216.075,
+        "quantity": 100,
+        "avg_price": 216.075
+      }
+    ]
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "total_trades": 2,
+  "win_rate": 0.0,
+  "total_pnl": 0,
+  "avg_pnl": 0.0,
+  "tag_analysis": {
+    "market-order": {
+      "count": 2,
+      "wins": 0,
+      "total_pnl": 0
+    }
+  },
+  "mistake_analysis": {},
+  "symbol_performance": {
+    "SPY": {
+      "trades": 1,
+      "wins": 0,
+      "total_pnl": 0
+    },
+    "V": {
+      "trades": 1,
+      "wins": 0,
+      "total_pnl": 0
+    }
+  }
+}

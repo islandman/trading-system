@@ -1,0 +1,44 @@
+{
+  "symbol": "SPY",
+  "price": 445.94,
+  "change": 0.0,
+  "change_percent": 0.0,
+  "volume": 25555,
+  "high": 445.94,
+  "low": 445.94,
+  "open": 445.94,
+  "nbbo": {
+    "bid": 445.72,
+    "ask": 446.16,
+    "bid_sz": 3182,
+    "ask_sz": 7158
+  },
+  "technical": {
+    "rsi": 50.0,
+    "macd": 0.0,
+    "macd_signal": 0.0,
+    "macd_histogram": 0.0,
+    "sma_20": 434.45580729052773,
+    "sma_50": 417.76688642459925,
+    "ema_12": 449.8953610857348,
+    "ema_26": 438.7106381265685,
+    "bollinger_upper": 0.0,
+    "bollinger_middle": 0.0,
+    "bollinger_lower": 0.0,
+    "atr": 1.0,
+    "volume_sma": 30500.412994162743
+  },
+  "fundamental": {
+    "pe_ratio": 23.430604615648846,
+    "pb_ratio": 3.2496455532870137,
+    "dividend_yield": 1.7401967915644994,
+    "market_cap": 396910981996.2166,
+    "eps": 21.371834765505774,
+    "revenue_growth": 5.898181698501883,
+    "profit_margin": 9.578482066619316,
+    "debt_to_equity": 0.8005446859500178,
+    "current_ratio": 2.2535882532188145,
+    "roe": 13.354727011620188,
+    "roa": 7.838643746655605
+  }
+}

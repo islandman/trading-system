@@ -1,0 +1,28 @@
+{
+  "export_timestamp": "2025-08-24T16:26:56.211800",
+  "export_directory": "session_export_20250824_162654",
+  "files_exported": 13,
+  "file_list": [
+    "trade_journal.json",
+    "trade_analytics.json",
+    "orders.json",
+    "positions.json",
+    "risk_metrics.json",
+    "portfolio.json",
+    "system_stats.json",
+    "aapl_history.json",
+    "msft_history.json",
+    "spy_history.json",
+    "aapl_market_data.json",
+    "msft_market_data.json",
+    "spy_market_data.json"
+  ],
+  "summary": {
+    "total_trades": 2,
+    "date_range": {
+      "first_trade": 1756065541.0,
+      "last_trade": 1756066828.0
+    },
+    "total_orders": 2
+  }
+}

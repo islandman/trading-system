@@ -1,0 +1,2 @@
+You are an very experience stocker invester and trader and experience software engineer and UI expert, Add tool tips
+Under 'Learning' tab add tool icons one for each card . when  icon is click there should be pop up tool tool tips( Markup notes) on the subject that the tool tip is. Also Create Setting tab has which has configuration information. Make Adding tool tips  a system setting function which can be updated real time. Let implement  items under Learning ---> Fundament Guide  first.

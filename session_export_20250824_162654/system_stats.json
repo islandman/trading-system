@@ -1,0 +1,12 @@
+{
+  "total_orders": 2,
+  "filled_orders": 2,
+  "pending_orders": 0,
+  "rejected_orders": 0,
+  "conditional_orders": 0,
+  "total_volume": 200,
+  "total_value": 41104.5,
+  "trade_journal_entries": 2,
+  "active_positions": 2,
+  "ts": 1756067215.4021063
+}

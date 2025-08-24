@@ -3,6 +3,10 @@ import EnhancedJournal from './components/EnhancedJournal'
 import ChartSubsystem from './components/ChartSubsystem'
 import AdvancedScanner from './components/AdvancedScanner'
 import Notes from './components/Notes'
+import Settings from './components/Settings'
+import AdvancedTooltip from './components/AdvancedTooltip'
+import { getTooltipContent } from './data/tooltipContent'
+import { getWikiContent } from './data/wikiContent'
 
 const BROKER = (import.meta.env.VITE_BROKER_URL) || 'http://localhost:8000'
 const SIP = (import.meta.env.VITE_SIP_URL) || 'http://localhost:8002'
@@ -74,16 +78,17 @@ function useMarketData(symbols = ['AAPL', 'MSFT', 'SPY']) {
     const mockData = {}
     const mockConnections = {}
     
+    // Initialize with stable base prices
     symbols.forEach(symbol => {
       const basePrice = symbol === 'AAPL' ? 150.0 : symbol === 'MSFT' ? 300.0 : 450.0
-      const change = (Math.random() - 0.5) * 10
-      const price = basePrice + change
+      const initialChange = (Math.random() - 0.5) * 2 // Smaller initial change
+      const price = basePrice + initialChange
       
       mockData[symbol] = {
         symbol: symbol,
         price: parseFloat(price.toFixed(2)),
-        change: parseFloat(change.toFixed(2)),
-        change_percent: parseFloat(((change / basePrice) * 100).toFixed(2)),
+        change: parseFloat(initialChange.toFixed(2)),
+        change_percent: parseFloat(((initialChange / basePrice) * 100).toFixed(2)),
         volume: Math.floor(Math.random() * 50000000) + 10000000,
         bid: parseFloat((price - 0.05).toFixed(2)),
         ask: parseFloat((price + 0.05).toFixed(2)),
@@ -96,28 +101,38 @@ function useMarketData(symbols = ['AAPL', 'MSFT', 'SPY']) {
     setMarketData(mockData)
     setConnections(mockConnections)
     
-    // Update mock data every 2 seconds
+    // Update mock data with smaller, more realistic changes every 5 seconds
     const interval = setInterval(() => {
-      const updatedData = {}
-      symbols.forEach(symbol => {
-        const basePrice = symbol === 'AAPL' ? 150.0 : symbol === 'MSFT' ? 300.0 : 450.0
-        const change = (Math.random() - 0.5) * 10
-        const price = basePrice + change
-        
-        updatedData[symbol] = {
-          symbol: symbol,
-          price: parseFloat(price.toFixed(2)),
-          change: parseFloat(change.toFixed(2)),
-          change_percent: parseFloat(((change / basePrice) * 100).toFixed(2)),
-          volume: Math.floor(Math.random() * 50000000) + 10000000,
-          bid: parseFloat((price - 0.05).toFixed(2)),
-          ask: parseFloat((price + 0.05).toFixed(2)),
-          bid_sz: Math.floor(Math.random() * 10000) + 1000,
-          ask_sz: Math.floor(Math.random() * 10000) + 1000
-        }
+      setMarketData(prevData => {
+        const updatedData = {}
+        symbols.forEach(symbol => {
+          const currentData = prevData[symbol]
+          if (!currentData) return
+          
+          const basePrice = symbol === 'AAPL' ? 150.0 : symbol === 'MSFT' ? 300.0 : 450.0
+          const currentPrice = currentData.price
+          
+          // Small random walk (more realistic price movement)
+          const priceChange = (Math.random() - 0.5) * 0.5 // Max $0.50 change
+          const newPrice = Math.max(basePrice * 0.9, Math.min(basePrice * 1.1, currentPrice + priceChange))
+          
+          const change = newPrice - basePrice
+          
+          updatedData[symbol] = {
+            symbol: symbol,
+            price: parseFloat(newPrice.toFixed(2)),
+            change: parseFloat(change.toFixed(2)),
+            change_percent: parseFloat(((change / basePrice) * 100).toFixed(2)),
+            volume: Math.floor(Math.random() * 50000000) + 10000000,
+            bid: parseFloat((newPrice - 0.05).toFixed(2)),
+            ask: parseFloat((newPrice + 0.05).toFixed(2)),
+            bid_sz: Math.floor(Math.random() * 10000) + 1000,
+            ask_sz: Math.floor(Math.random() * 10000) + 1000
+          }
+        })
+        return updatedData
       })
-      setMarketData(updatedData)
-    }, 2000)
+    }, 5000) // Changed from 2 seconds to 5 seconds
     
     return () => clearInterval(interval)
   }, [symbols.join(',')])
@@ -1311,6 +1326,83 @@ function App() {
   const [activeTab, setActiveTab] = useState('trading')
   const [learningSubTab, setLearningSubTab] = useState('overview')
   
+  // Settings state
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('tradingSystemSettings')
+    return saved ? JSON.parse(saved) : {
+      tooltips: {
+        enabled: true,
+        delay: 200,
+        maxWidth: 400,
+        showArrow: true,
+        position: 'top'
+      },
+      marketData: {
+        updateInterval: 5000,
+        showVolume: true,
+        showBidAsk: true
+      },
+      trading: {
+        defaultOrderSize: 100,
+        confirmOrders: true,
+        autoRefresh: true
+      },
+      display: {
+        theme: 'light',
+        compactMode: false,
+        showAnimations: true
+      }
+    }
+  })
+
+  // Markdown rendering function for wiki content
+  const renderMarkdown = (text) => {
+    if (!text) return ''
+    
+    return text
+      // Headers
+      .replace(/^### (.*$)/gim, '<h3 style="margin: 16px 0 8px 0; font-size: 18px; color: #1e40af; border-bottom: 2px solid #3b82f6; padding-bottom: 4px;">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 style="margin: 20px 0 12px 0; font-size: 22px; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 style="margin: 24px 0 16px 0; font-size: 28px; color: #0f172a; border-bottom: 3px solid #1e40af; padding-bottom: 8px;">$1</h1>')
+      
+      // Bold and italic
+      .replace(/\*\*(.*?)\*\*/g, '<strong style="font-weight: 700; color: #1e293b;">$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em style="font-style: italic; color: #374151;">$1</em>')
+      
+      // Code blocks
+      .replace(/```(.*?)```/g, '<pre style="background: #1e293b; color: #f8fafc; padding: 16px; border-radius: 6px; overflow-x: auto; margin: 12px 0; font-family: monospace; font-size: 13px;">$1</pre>')
+      .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; color: #1e293b; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: 13px; border: 1px solid #e2e8f0;">$1</code>')
+      
+      // Lists
+      .replace(/^- (.*$)/gim, '<li style="margin: 4px 0; padding-left: 8px; color: #374151;">$1</li>')
+      .replace(/(<li.*<\/li>)/g, '<ul style="margin: 8px 0; padding-left: 20px; list-style-type: disc;">$1</ul>')
+      
+      // Numbered lists
+      .replace(/^\d+\. (.*$)/gim, '<li style="margin: 4px 0; padding-left: 8px; color: #374151;">$1</li>')
+      .replace(/(<li.*<\/li>)/g, '<ol style="margin: 8px 0; padding-left: 20px;">$1</ol>')
+      
+      // Links
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" style="color: #3b82f6; text-decoration: underline;">$1</a>')
+      
+      // Paragraphs and line breaks
+      .replace(/\n\n/g, '</p><p style="margin: 12px 0; line-height: 1.6; color: #374151;">')
+      .replace(/\n/g, '<br>')
+      
+      // Wrap in paragraph tags
+      .replace(/^(?!<[h|p|u|o|pre|blockquote])(.*)$/gm, '<p style="margin: 12px 0; line-height: 1.6; color: #374151;">$1</p>')
+      
+      // Blockquotes
+      .replace(/^> (.*$)/gim, '<blockquote style="border-left: 4px solid #3b82f6; padding-left: 16px; margin: 16px 0; background: #f8fafc; padding: 12px; border-radius: 4px; font-style: italic; color: #64748b;">$1</blockquote>')
+      
+      // Tables (basic support)
+      .replace(/\|(.+)\|/g, (match) => {
+        const cells = match.split('|').filter(cell => cell.trim())
+        return `<td style="border: 1px solid #e2e8f0; padding: 8px; text-align: left;">${cells.join('</td><td style="border: 1px solid #e2e8f0; padding: 8px; text-align: left;">')}</td>`
+      })
+      .replace(/(<td.*<\/td>)/g, '<tr style="border-bottom: 1px solid #e2e8f0;">$1</tr>')
+      .replace(/(<tr.*<\/tr>)/g, '<table style="border-collapse: collapse; width: 100%; margin: 16px 0; background: white;">$1</table>')
+  }
+  
   const fetchStats = async () => {
     setStatsLoading(true)
     try {
@@ -1405,7 +1497,7 @@ function App() {
           border: '1px solid #e5e7eb',
           overflow: 'hidden'
         }}>
-          {['trading', 'charts', 'portfolio', 'journal', 'advanced', 'notes', 'learning', 'technical', 'fundamental', 'analysis'].map(tab => (
+          {['trading', 'charts', 'portfolio', 'journal', 'advanced', 'notes', 'learning', 'technical', 'fundamental', 'analysis', 'settings'].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1781,30 +1873,169 @@ function App() {
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', color: '#1e293b' }}>📊 Key Indicators</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>RSI (Relative Strength Index)</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Measures momentum on a scale of 0 to 100. Above 70 = overbought, below 30 = oversold.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>MACD (Moving Average Convergence Divergence)</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Shows relationship between two moving averages. Bullish when MACD crosses above signal line.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>Bollinger Bands</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Volatility indicator. Price touching upper band = overbought, lower band = oversold.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>Moving Averages</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Trend indicators. Golden cross (50MA above 200MA) = bullish, death cross = bearish.
-                        </p>
-                      </div>
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'rsi').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#3b82f6', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>RSI (Relative Strength Index)</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Measures momentum on a scale of 0 to 100. Above 70 = overbought, below 30 = oversold.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>RSI (Relative Strength Index)</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Measures momentum on a scale of 0 to 100. Above 70 = overbought, below 30 = oversold.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'macd').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#3b82f6', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>MACD (Moving Average Convergence Divergence)</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Shows relationship between two moving averages. Bullish when MACD crosses above signal line.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>MACD (Moving Average Convergence Divergence)</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Shows relationship between two moving averages. Bullish when MACD crosses above signal line.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'bollinger_bands').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#3b82f6', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>Bollinger Bands</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Volatility indicator. Price touching upper band = overbought, lower band = oversold.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>Bollinger Bands</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Volatility indicator. Price touching upper band = overbought, lower band = oversold.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'moving_averages').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#3b82f6', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>Moving Averages</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Trend indicators. Golden cross (50MA above 200MA) = bullish, death cross = bearish.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>Moving Averages</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Trend indicators. Golden cross (50MA above 200MA) = bullish, death cross = bearish.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -1836,6 +2067,180 @@ function App() {
                       </div>
                     </div>
                   </div>
+
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: '8px',
+                    border: '1px solid #bfdbfe'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>📊 Advanced Analysis</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'volume_analysis').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#1e40af', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#1e40af' }}>Volume Analysis</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Confirms price movements and identifies potential reversals through trading volume patterns.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#1e40af' }}>Volume Analysis</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Confirms price movements and identifies potential reversals through trading volume patterns.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'support_resistance').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#1e40af', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#1e40af' }}>Support & Resistance</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Key price levels where buying or selling pressure is expected to emerge.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#1e40af' }}>Support & Resistance</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Key price levels where buying or selling pressure is expected to emerge.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'chart_patterns').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#1e40af', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#1e40af' }}>Chart Patterns</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Recurring price formations that indicate potential future price movements.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#1e40af' }}>Chart Patterns</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Recurring price formations that indicate potential future price movements.
+                          </p>
+                        </div>
+                      )}
+
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip
+                          content={getTooltipContent('technical', 'fibonacci').content}
+                          position={settings.tooltips?.position || 'top'}
+                          delay={settings.tooltips?.delay || 200}
+                          maxWidth={settings.tooltips?.maxWidth || 400}
+                          showArrow={settings.tooltips?.showArrow !== false}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            position: 'relative',
+                            cursor: 'pointer'
+                          }}>
+                            <div style={{ 
+                              position: 'absolute', 
+                              top: '8px', 
+                              right: '8px', 
+                              color: '#1e40af', 
+                              fontSize: '16px',
+                              fontWeight: 'bold'
+                            }}>
+                              ℹ️
+                            </div>
+                            <strong style={{ color: '#1e40af' }}>Fibonacci Retracements</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Mathematical ratios to identify potential support and resistance levels.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#1e40af' }}>Fibonacci Retracements</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Mathematical ratios to identify potential support and resistance levels.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1857,30 +2262,197 @@ function App() {
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', color: '#1e293b' }}>📈 Key Metrics</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px' }}>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>P/E Ratio (Price-to-Earnings)</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Compares stock price to earnings. Lower ratios may indicate undervaluation.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>P/B Ratio (Price-to-Book)</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Compares market value to book value. Below 1 may indicate undervaluation.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>ROE (Return on Equity)</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Measures profitability relative to shareholder equity. Higher is better.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-                        <strong style={{ color: '#3b82f6' }}>Debt-to-Equity</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
-                          Measures financial leverage. Lower ratios indicate less risk.
-                        </p>
-                      </div>
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('fundamental', 'pe_ratio').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>P/E Ratio (Price-to-Earnings)</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Compares stock price to earnings. Lower ratios may indicate undervaluation.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>P/E Ratio (Price-to-Earnings)</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Compares stock price to earnings. Lower ratios may indicate undervaluation.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('fundamental', 'pb_ratio').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>P/B Ratio (Price-to-Book)</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Compares market value to book value. Below 1 may indicate undervaluation.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>P/B Ratio (Price-to-Book)</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Compares market value to book value. Below 1 may indicate undervaluation.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('fundamental', 'roe').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>ROE (Return on Equity)</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Measures profitability relative to shareholder equity. Higher is better.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>ROE (Return on Equity)</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Measures profitability relative to shareholder equity. Higher is better.
+                          </p>
+                        </div>
+                      )}
+                      
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('fundamental', 'debt_to_equity').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #e2e8f0',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>Debt-to-Equity</strong>
+                            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                              Measures financial leverage. Lower ratios indicate less risk.
+                            </p>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                          <strong style={{ color: '#3b82f6' }}>Debt-to-Equity</strong>
+                          <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#64748b' }}>
+                            Measures financial leverage. Lower ratios indicate less risk.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -1892,24 +2464,113 @@ function App() {
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>💡 Investment Strategies</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
-                        <strong style={{ color: '#3b82f6' }}>Value Investing</strong>
-                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
-                          <li>Low P/E ratios</li>
-                          <li>High dividend yields</li>
-                          <li>Strong balance sheets</li>
-                          <li>Undervalued assets</li>
-                        </ul>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
-                        <strong style={{ color: '#3b82f6' }}>Growth Investing</strong>
-                        <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
-                          <li>High revenue growth</li>
-                          <li>Expanding markets</li>
-                          <li>Innovation focus</li>
-                          <li>Future potential</li>
-                        </ul>
-                      </div>
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('value_investing', 'low_pe').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>Value Investing</strong>
+                            <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                              <li>Low P/E ratios</li>
+                              <li>High dividend yields</li>
+                              <li>Strong balance sheets</li>
+                              <li>Undervalued assets</li>
+                            </ul>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#3b82f6' }}>Value Investing</strong>
+                          <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                            <li>Low P/E ratios</li>
+                            <li>High dividend yields</li>
+                            <li>Strong balance sheets</li>
+                            <li>Undervalued assets</li>
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {settings.tooltips?.enabled ? (
+                        <AdvancedTooltip 
+                          content={getTooltipContent('growth_investing', 'high_revenue_growth').content}
+                          position={settings.tooltips.position}
+                          delay={settings.tooltips.delay}
+                          maxWidth={settings.tooltips.maxWidth}
+                          showArrow={settings.tooltips.showArrow}
+                        >
+                          <div style={{ 
+                            padding: '12px', 
+                            backgroundColor: '#ffffff', 
+                            borderRadius: '6px', 
+                            border: '1px solid #bfdbfe',
+                            cursor: 'pointer',
+                            position: 'relative'
+                          }}>
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              width: '20px',
+                              height: '20px',
+                              backgroundColor: '#3b82f6',
+                              borderRadius: '50%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'white',
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              i
+                            </div>
+                            <strong style={{ color: '#3b82f6' }}>Growth Investing</strong>
+                            <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                              <li>High revenue growth</li>
+                              <li>Expanding markets</li>
+                              <li>Innovation focus</li>
+                              <li>Future potential</li>
+                            </ul>
+                          </div>
+                        </AdvancedTooltip>
+                      ) : (
+                        <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bfdbfe' }}>
+                          <strong style={{ color: '#3b82f6' }}>Growth Investing</strong>
+                          <ul style={{ margin: '8px 0 0 0', paddingLeft: '16px', fontSize: '14px', color: '#374151' }}>
+                            <li>High revenue growth</li>
+                            <li>Expanding markets</li>
+                            <li>Innovation focus</li>
+                            <li>Future potential</li>
+                          </ul>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1925,6 +2586,7 @@ function App() {
               }}>
                 <h3 style={{ margin: '0 0 16px 0' }}>Strategy Wiki</h3>
                 <div style={{ display: 'grid', gap: '16px' }}>
+                  {/* Trading Strategies Section */}
                   <div style={{
                     padding: '16px',
                     backgroundColor: '#fef3c7',
@@ -1932,28 +2594,19 @@ function App() {
                     border: '1px solid #fde68a'
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', color: '#92400e' }}>📚 Trading Strategies</h4>
-                    <div style={{ display: 'grid', gap: '12px' }}>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
-                        <strong style={{ color: '#f59e0b' }}>Swing Trading</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Hold positions for days to weeks, using technical analysis to identify entry and exit points.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
-                        <strong style={{ color: '#f59e0b' }}>Day Trading</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Open and close positions within the same day, capitalizing on intraday price movements.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #fde68a' }}>
-                        <strong style={{ color: '#f59e0b' }}>Position Trading</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Long-term positions based on fundamental analysis and major market trends.
-                        </p>
-                      </div>
-                    </div>
+                    <div 
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(getWikiContent('trading_strategies').content)
+                      }}
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      }}
+                    />
                   </div>
                   
+                  {/* Risk Management Section */}
                   <div style={{
                     padding: '16px',
                     backgroundColor: '#f0fdf4',
@@ -1961,26 +2614,76 @@ function App() {
                     border: '1px solid #bbf7d0'
                   }}>
                     <h4 style={{ margin: '0 0 12px 0', color: '#166534' }}>🛡️ Risk Management</h4>
-                    <div style={{ display: 'grid', gap: '12px' }}>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-                        <strong style={{ color: '#22c55e' }}>Position Sizing</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Never risk more than 1-2% of your capital on any single trade.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-                        <strong style={{ color: '#22c55e' }}>Stop Losses</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Always set stop losses to limit potential losses and protect capital.
-                        </p>
-                      </div>
-                      <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
-                        <strong style={{ color: '#22c55e' }}>Diversification</strong>
-                        <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#374151' }}>
-                          Spread risk across different sectors, asset classes, and strategies.
-                        </p>
-                      </div>
-                    </div>
+                    <div 
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(getWikiContent('risk_management').content)
+                      }}
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      }}
+                    />
+                  </div>
+
+                  {/* Market Analysis Section */}
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: '8px',
+                    border: '1px solid #bfdbfe'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#1e40af' }}>📊 Market Analysis</h4>
+                    <div 
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(getWikiContent('market_analysis').content)
+                      }}
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      }}
+                    />
+                  </div>
+
+                  {/* Trading Psychology Section */}
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fdf2f8',
+                    borderRadius: '8px',
+                    border: '1px solid #fbcfe8'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#be185d' }}>🧠 Trading Psychology</h4>
+                    <div 
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(getWikiContent('psychology').content)
+                      }}
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      }}
+                    />
+                  </div>
+
+                  {/* Advanced Techniques Section */}
+                  <div style={{
+                    padding: '16px',
+                    backgroundColor: '#fefce8',
+                    borderRadius: '8px',
+                    border: '1px solid #fde047'
+                  }}>
+                    <h4 style={{ margin: '0 0 12px 0', color: '#a16207' }}>⚡ Advanced Techniques</h4>
+                    <div 
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdown(getWikiContent('advanced_techniques').content)
+                      }}
+                      style={{
+                        fontSize: '14px',
+                        lineHeight: '1.6',
+                        color: '#374151'
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -2067,6 +2770,13 @@ function App() {
             
             <DetailedAnalysis symbol={selectedSymbol} marketData={marketData} />
           </div>
+        )}
+        
+        {activeTab === 'settings' && (
+          <Settings 
+            settings={settings} 
+            onSettingsChange={setSettings}
+          />
         )}
       </div>
     </div>

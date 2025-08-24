@@ -1,0 +1,44 @@
+{
+  "symbol": "MSFT",
+  "price": 305.03,
+  "change": 0.0,
+  "change_percent": 0.0,
+  "volume": 87200,
+  "high": 305.03,
+  "low": 305.03,
+  "open": 305.03,
+  "nbbo": {
+    "bid": 304.87,
+    "ask": 305.18,
+    "bid_sz": 2558,
+    "ask_sz": 4336
+  },
+  "technical": {
+    "rsi": 50.0,
+    "macd": 0.0,
+    "macd_signal": 0.0,
+    "macd_histogram": 0.0,
+    "sma_20": 315.55359527330506,
+    "sma_50": 327.71909583749897,
+    "ema_12": 308.8659324987822,
+    "ema_26": 310.1787615385864,
+    "bollinger_upper": 0.0,
+    "bollinger_middle": 0.0,
+    "bollinger_lower": 0.0,
+    "atr": 1.0,
+    "volume_sma": 93478.24275286372
+  },
+  "fundamental": {
+    "pe_ratio": 32.44694473068492,
+    "pb_ratio": 13.403094901884307,
+    "dividend_yield": 0.9330850071822051,
+    "market_cap": 2247444330940.7515,
+    "eps": 11.023044909790995,
+    "revenue_growth": 3.2232438095088725,
+    "profit_margin": 6.75226415629896,
+    "debt_to_equity": 0.6350412825459821,
+    "current_ratio": 2.1657471961842063,
+    "roe": 15.56663645721377,
+    "roa": 6.5627158986116445
+  }
+}
