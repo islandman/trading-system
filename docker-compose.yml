@@ -1,0 +1,25 @@
+services:
+  broker:
+    build: ./broker
+    environment:
+      EXCHANGE_URL: ${EXCHANGE_URL:-http://exchange:8081}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+    ports: ["8000:8000"]
+    depends_on: [exchange, sip]
+    volumes:
+      - ./config:/app/config
+  exchange:
+    build: ./exchange
+    environment:
+      BROKER_CALLBACK_URL: ${BROKER_CALLBACK_URL:-http://broker:8000/exec}
+    ports: ["8081:8081"]
+  sip:
+    build: ./sip
+    environment:
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      SIP_SYMBOLS: ${SIP_SYMBOLS:-AAPL,MSFT,SPY}
+    ports: ["8002:8002"]
+  ui:
+    build: ./ui
+    ports: ["5173:5173"]
+    depends_on: [broker, sip]

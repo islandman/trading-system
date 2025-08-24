@@ -1,0 +1,35 @@
+env: dev
+clock:
+  mode: real_time
+  speed: 1.0
+sessions:
+  pre_open:  "09:25:00-09:30:00 America/New_York"
+  regular:   "09:30:00-16:00:00 America/New_York"
+  auctions:
+    open:  "09:30:00 America/New_York"
+    close: "16:00:00 America/New_York"
+tick_size: 0.01
+symbols:
+  list: [AAPL, MSFT, SPY, NVDA, AMZN, GOOGL, META, TSLA, JPM, BAC]
+  l2_depth: 10
+  simulate_oddlots: true
+  oddlots_count_for_nbbo: false
+risk:
+  collars_pct: 0.10
+  max_notional_per_order: 250000
+margin:
+  initial_long: 0.50
+  maintenance_long: 0.25
+luld:
+  ref_window_minutes: 5
+  tier1_band_pct: 0.05
+  halt_duration_minutes: [5, 15]
+fees:
+  maker: -0.0020
+  taker:  0.0030
+  auction: 0.0010
+routing:
+  pfof_enabled: false
+settlement:
+  cycle: T+1
+  netting: true
