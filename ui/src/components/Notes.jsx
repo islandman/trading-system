@@ -53,11 +53,11 @@ function Notes() {
   return (
     <div style={{
       padding: '24px',
-      border: '1px solid #e5e7eb',
+      border: '1px solid var(--border-color)',
       borderRadius: '8px',
-      backgroundColor: '#ffffff'
+      backgroundColor: 'var(--bg-primary)'
     }}>
-      <h3 style={{ margin: '0 0 16px 0' }}>Trading Notes</h3>
+              <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Trading Notes</h3>
       
       {/* Add Note Section */}
       <div style={{
@@ -201,7 +201,7 @@ function Notes() {
                     }}>
                       {category?.label || 'General'}
                     </span>
-                    <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                       {note.date}
                     </span>
                   </div>
@@ -223,7 +223,7 @@ function Notes() {
                 <div style={{
                   fontSize: '14px',
                   lineHeight: '1.5',
-                  color: '#374151',
+                  color: 'var(--text-primary)',
                   whiteSpace: 'pre-wrap'
                 }}>
                   {note.text}

@@ -50,10 +50,10 @@ function AdvancedScanner({ marketData }) {
 
   const loadPresets = async () => {
     try {
-      const response = await fetch(`${SIP.replace('/ws/nbbo?symbol=', '')}/scanner/presets`)
+      const response = await fetch(`${SIP}/scanner/presets`)
       if (response.ok) {
         const data = await response.json()
-        setPresets(data.presets)
+        setPresets(data.presets || {})
       }
     } catch (error) {
       console.error('Failed to load presets:', error)
@@ -70,7 +70,7 @@ function AdvancedScanner({ marketData }) {
         }
       })
       
-      const response = await fetch(`${SIP.replace('/ws/nbbo?symbol=', '')}/scanner/advanced?${params}`)
+      const response = await fetch(`${SIP}/scanner/advanced?${params}`)
       if (response.ok) {
         const data = await response.json()
         setScannerResults(data.scanner_results || [])
@@ -170,15 +170,15 @@ function AdvancedScanner({ marketData }) {
   return (
     <div style={{
       padding: '16px',
-      border: '1px solid #e5e7eb',
+      border: '1px solid var(--border-color)',
       borderRadius: '8px',
-      backgroundColor: '#ffffff'
+      backgroundColor: 'var(--bg-primary)'
     }}>
       {/* Tab Navigation */}
       <div style={{
         display: 'flex',
         marginBottom: '16px',
-        backgroundColor: '#f3f4f6',
+        backgroundColor: 'var(--bg-tertiary)',
         borderRadius: '6px',
         overflow: 'hidden'
       }}>
@@ -186,8 +186,8 @@ function AdvancedScanner({ marketData }) {
           onClick={() => setActiveTab('orders')}
           style={{
             padding: '12px 24px',
-            backgroundColor: activeTab === 'orders' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'orders' ? 'white' : '#6b7280',
+            backgroundColor: activeTab === 'orders' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'orders' ? 'white' : 'var(--text-secondary)',
             border: 'none',
             cursor: 'pointer',
             fontWeight: activeTab === 'orders' ? 'bold' : 'normal'
@@ -199,8 +199,8 @@ function AdvancedScanner({ marketData }) {
           onClick={() => setActiveTab('scanner')}
           style={{
             padding: '12px 24px',
-            backgroundColor: activeTab === 'scanner' ? '#3b82f6' : 'transparent',
-            color: activeTab === 'scanner' ? 'white' : '#6b7280',
+            backgroundColor: activeTab === 'scanner' ? 'var(--accent-primary)' : 'transparent',
+            color: activeTab === 'scanner' ? 'white' : 'var(--text-secondary)',
             border: 'none',
             cursor: 'pointer',
             fontWeight: activeTab === 'scanner' ? 'bold' : 'normal'
@@ -213,34 +213,48 @@ function AdvancedScanner({ marketData }) {
       {/* Advanced Orders Tab */}
       {activeTab === 'orders' && (
         <div>
-          <h3 style={{ margin: '0 0 16px 0' }}>Advanced Order Processing</h3>
+          <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Advanced Order Processing</h3>
           
           <form onSubmit={handleOrderSubmit} style={{
             display: 'grid',
             gap: '16px',
             padding: '16px',
-            backgroundColor: '#f8fafc',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '8px',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border-color)'
           }}>
             {/* Basic Order Details */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Symbol</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Symbol</label>
                 <input 
                   type="text"
                   value={orderForm.symbol}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, symbol: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '4px', 
+                    width: '100%',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 />
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Side</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Side</label>
                 <select 
                   value={orderForm.side}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, side: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '4px', 
+                    width: '100%',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 >
                   <option value="BUY">BUY</option>
                   <option value="SELL">SELL</option>
@@ -248,11 +262,18 @@ function AdvancedScanner({ marketData }) {
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Order Type</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Order Type</label>
                 <select 
                   value={orderForm.order_type}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, order_type: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '4px', 
+                    width: '100%',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 >
                   <option value="MARKET">MARKET</option>
                   <option value="LIMIT">LIMIT</option>
@@ -266,12 +287,19 @@ function AdvancedScanner({ marketData }) {
               </div>
               
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Quantity</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Quantity</label>
                 <input 
                   type="number"
                   value={orderForm.qty}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, qty: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ 
+                    padding: '8px', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '4px', 
+                    width: '100%',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
+                  }}
                 />
               </div>
             </div>
@@ -404,7 +432,7 @@ function AdvancedScanner({ marketData }) {
               disabled={submitting}
               style={{
                 padding: '12px 24px',
-                backgroundColor: orderForm.side === 'BUY' ? '#22c55e' : '#ef4444',
+                backgroundColor: orderForm.side === 'BUY' ? 'var(--accent-success)' : 'var(--accent-danger)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
@@ -428,13 +456,13 @@ function AdvancedScanner({ marketData }) {
             alignItems: 'center',
             marginBottom: '16px'
           }}>
-            <h3 style={{ margin: 0 }}>Advanced Stock Scanner</h3>
+            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Advanced Stock Scanner</h3>
             <button
               onClick={runAdvancedScanner}
               disabled={loading}
               style={{
                 padding: '8px 12px',
-                backgroundColor: '#3b82f6',
+                backgroundColor: 'var(--accent-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
@@ -450,11 +478,11 @@ function AdvancedScanner({ marketData }) {
           <div style={{
             marginBottom: '16px',
             padding: '12px',
-            backgroundColor: '#f8fafc',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '6px',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border-color)'
           }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>Quick Presets</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-primary)' }}>Quick Presets</h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {Object.entries(presets).map(([key, preset]) => (
                 <button
@@ -462,8 +490,8 @@ function AdvancedScanner({ marketData }) {
                   onClick={() => applyPreset(key)}
                   style={{
                     padding: '6px 12px',
-                    backgroundColor: selectedPreset === key ? '#3b82f6' : '#e2e8f0',
-                    color: selectedPreset === key ? 'white' : '#374151',
+                    backgroundColor: selectedPreset === key ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+                    color: selectedPreset === key ? 'white' : 'var(--text-primary)',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -480,29 +508,43 @@ function AdvancedScanner({ marketData }) {
           <div style={{
             marginBottom: '16px',
             padding: '12px',
-            backgroundColor: '#f8fafc',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '6px',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border-color)'
           }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>Advanced Filters</h4>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-primary)' }}>Advanced Filters</h4>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Price Range</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Price Range</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="number"
                     placeholder="Min"
                     value={filters.min_price}
                     onChange={(e) => setFilters(prev => ({ ...prev, min_price: parseFloat(e.target.value) || 0 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ 
+                      padding: '4px 8px', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '4px', 
+                      width: '80px',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   />
-                  <span style={{ alignSelf: 'center' }}>-</span>
+                  <span style={{ alignSelf: 'center', color: 'var(--text-primary)' }}>-</span>
                   <input
                     type="number"
                     placeholder="Max"
                     value={filters.max_price}
                     onChange={(e) => setFilters(prev => ({ ...prev, max_price: parseFloat(e.target.value) || 10000 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ 
+                      padding: '4px 8px', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '4px', 
+                      width: '80px',
+                      backgroundColor: 'var(--bg-primary)',
+                      color: 'var(--text-primary)'
+                    }}
                   />
                 </div>
               </div>

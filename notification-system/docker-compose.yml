@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: notifications
+      POSTGRES_USER: notification_user
+      POSTGRES_PASSWORD: notification_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user -d notifications"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and message queues
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notification System API
+  notification-api:
+    build: .
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://notification_user:notification_pass@postgres:5432/notifications
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-secret-key-change-in-production
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    networks:
+      - default
+      - notification-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Notification Workers (for processing channel jobs)
+  notification-worker:
+    build: .
+    command: ["python", "-m", "app.worker"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://notification_user:notification_pass@postgres:5432/notifications
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-secret-key-change-in-production
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+    deploy:
+      replicas: 2
+
+  # Database migrations
+  migrations:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://notification_user:notification_pass@postgres:5432/notifications
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  notification-network:
+    external: true

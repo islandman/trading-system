@@ -1,0 +1,172 @@
+/* Theme CSS Variables */
+:root {
+  /* Light Theme (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-tertiary: #f3f4f6;
+  --text-primary: #1f2937;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
+  --accent-primary: #3b82f6;
+  --accent-success: #22c55e;
+  --accent-warning: #f59e0b;
+  --accent-danger: #ef4444;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  --bg-primary: #1f2937;
+  --bg-secondary: #111827;
+  --bg-tertiary: #374151;
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --border-color: #374151;
+  --border-light: #4b5563;
+  --accent-primary: #60a5fa;
+  --accent-success: #34d399;
+  --accent-warning: #fbbf24;
+  --accent-danger: #f87171;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+}
+
+/* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme transition classes */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Common component styles */
+.card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.button-primary {
+  background-color: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.button-primary:hover {
+  background-color: var(--accent-primary);
+  opacity: 0.9;
+}
+
+.button-secondary {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.button-secondary:hover {
+  background-color: var(--border-color);
+}
+
+/* Input styles */
+.input {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Table styles */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--bg-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.table th,
+.table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table th {
+  background-color: var(--bg-tertiary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table tr:hover {
+  background-color: var(--bg-secondary);
+}
+
+/* Status indicators */
+.status-connected {
+  color: var(--accent-success);
+}
+
+.status-disconnected {
+  color: var(--accent-danger);
+}
+
+.status-warning {
+  color: var(--accent-warning);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

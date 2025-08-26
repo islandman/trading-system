@@ -169,9 +169,9 @@ const Settings = ({ settings, onSettingsChange }) => {
   return (
     <div style={{
       padding: '24px',
-      border: '1px solid #e5e7eb',
+      border: '1px solid var(--border-color)',
       borderRadius: '8px',
-      backgroundColor: '#ffffff'
+      backgroundColor: 'var(--bg-primary)'
     }}>
       <div style={{
         display: 'flex',
@@ -179,7 +179,7 @@ const Settings = ({ settings, onSettingsChange }) => {
         alignItems: 'center',
         marginBottom: '24px'
       }}>
-        <h3 style={{ margin: 0 }}>⚙️ System Settings</h3>
+        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>⚙️ System Settings</h3>
         <button
           onClick={resetToDefaults}
           style={{

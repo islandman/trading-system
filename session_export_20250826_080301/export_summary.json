@@ -1,0 +1,18 @@
+{
+  "export_timestamp": "2025-08-26T08:03:03.032123",
+  "export_directory": "session_export_20250826_080301",
+  "files_exported": 10,
+  "file_list": [
+    "trade_analytics.json",
+    "risk_metrics.json",
+    "portfolio.json",
+    "system_stats.json",
+    "aapl_history.json",
+    "msft_history.json",
+    "spy_history.json",
+    "aapl_market_data.json",
+    "msft_market_data.json",
+    "spy_market_data.json"
+  ],
+  "summary": {}
+}

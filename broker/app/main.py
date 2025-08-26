@@ -16,6 +16,29 @@ from .state import store
 from .ws import ws_manager
 from .risk import pretrade_checks
 
+# Import notification client
+from .notification_client import NotificationClient
+
+# Initialize notification client
+notification_client = NotificationClient(
+    base_url="http://notification-api:8003",
+    api_key="trading-system-key"
+)
+
+async def send_notification(event_type: str, payload: dict, severity: str = "medium", dedupe_key: str = None):
+    """Send notification event to notification system"""
+    try:
+        await notification_client.publish_event(
+            event_type=event_type,
+            producer="trading-system",
+            payload=payload,
+            severity=severity,
+            dedupe_key=dedupe_key
+        )
+        print(f"📢 Notification sent: {event_type}")
+    except Exception as e:
+        print(f"⚠️ Failed to send notification {event_type}: {e}")
+
 EXCHANGE_URL = os.getenv("EXCHANGE_URL", "http://exchange:8081")
 CONFIG_PATH = os.getenv("CONFIG_PATH", "/app/app/../config/sim.yaml")
 
@@ -617,6 +640,23 @@ async def route_order_to_exchange(order: OrderOut):
         except Exception as e:
             order.status = Status.REJECTED
             order.message = f"Route error: {str(e)}"
+            
+            # Send order rejected notification
+            await send_notification(
+                event_type="ORDER_REJECTED",
+                payload={
+                    "user_id": "default_user",
+                    "order_id": order.id,
+                    "symbol": order.symbol,
+                    "side": order.side,
+                    "quantity": order.qty,
+                    "order_type": order.order_type,
+                    "reject_reason": f"Route error: {str(e)}"
+                },
+                severity="high",
+                dedupe_key=f"order_rejected_{order.id}"
+            )
+            
             await ws_manager.broadcast({"type": "order_update", "data": order.model_dump()})
 
 @app.post("/orders", response_model=OrderOut, status_code=201)
@@ -624,7 +664,7 @@ async def place_order(order_in: OrderIn):
     try:
         print(f"🔵 Received order: {order_in.symbol} {order_in.side} {order_in.qty} {order_in.order_type}")
         
-        ok, reason = pretrade_checks(order_in, store.cfg)
+        ok, reason = await pretrade_checks(order_in, store.cfg)
         if not ok:
             raise HTTPException(status_code=400, detail=reason)
 
@@ -663,6 +703,23 @@ async def place_order(order_in: OrderIn):
         else:
             # Regular order - route immediately
             await route_order_to_exchange(order)
+            
+            # Send order placed notification
+            await send_notification(
+                event_type="ORDER_PLACED",
+                payload={
+                    "user_id": "default_user",  # You can make this configurable
+                    "order_id": order.id,
+                    "symbol": order.symbol,
+                    "side": order.side,
+                    "quantity": order.qty,
+                    "order_type": order.order_type,
+                    "limit_price": order.limit_price,
+                    "stop_price": order.stop_price
+                },
+                severity="low",
+                dedupe_key=f"order_placed_{order.id}"
+            )
             
             # Broadcast NEW status
             await ws_manager.broadcast({"type": "order_update", "data": order.model_dump()})
@@ -786,6 +843,23 @@ async def cancel_order(order_id: str):
                     linked_order.message = "Canceled due to OCO"
                     linked_order.last_modified = time.time()
             
+        # Send order canceled notification
+        await send_notification(
+            event_type="ORDER_CANCELED",
+            payload={
+                "user_id": "default_user",
+                "order_id": order.id,
+                "symbol": order.symbol,
+                "side": order.side,
+                "quantity": order.qty,
+                "filled_qty": order.filled_qty,
+                "leaves_qty": order.leaves_qty,
+                "cancel_reason": "Canceled by user"
+            },
+            severity="low",
+            dedupe_key=f"order_canceled_{order.id}"
+        )
+        
         # Broadcast cancellation
         await ws_manager.broadcast({"type": "order_update", "data": order.model_dump()})
         
@@ -1015,6 +1089,44 @@ async def exec_report(request: Request):
         # Update order book
         print(f"📊 Updating order book for {o.symbol}")
         update_order_book(o.symbol, o.side, er.price, er.qty, "REMOVE")
+
+        # Send execution notification
+        await send_notification(
+            event_type="ORDER_EXECUTED",
+            payload={
+                "user_id": "default_user",
+                "order_id": o.id,
+                "symbol": o.symbol,
+                "side": o.side,
+                "quantity": er.qty,
+                "price": er.price,
+                "total_filled": o.filled_qty,
+                "leaves_qty": o.leaves_qty,
+                "status": o.status,
+                "venue": er.venue,
+                "execution_time": er.execution_time
+            },
+            severity="medium",
+            dedupe_key=f"order_exec_{o.id}_{er.execution_time}"
+        )
+
+        # Send order filled notification if completely filled
+        if o.status == Status.FILLED:
+            await send_notification(
+                event_type="ORDER_FILLED",
+                payload={
+                    "user_id": "default_user",
+                    "order_id": o.id,
+                    "symbol": o.symbol,
+                    "side": o.side,
+                    "quantity": o.qty,
+                    "avg_price": o.avg_price,
+                    "total_value": o.qty * (o.avg_price or 0),
+                    "execution_time": er.execution_time
+                },
+                severity="medium",
+                dedupe_key=f"order_filled_{o.id}"
+            )
 
         await ws_manager.broadcast({"type": "order_update", "data": o.model_dump()})
         return {"ok": True}

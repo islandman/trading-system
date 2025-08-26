@@ -1,0 +1,71 @@
+{
+  "portfolio": [
+    {
+      "symbol": "AAPL",
+      "shares": 100,
+      "avg_price": 145.5,
+      "current_price": 149.85,
+      "market_value": 14985.0,
+      "cost_basis": 14550.0,
+      "unrealized_pnl": 435.0,
+      "pnl_percent": 2.9896907216494846,
+      "sector": "Technology",
+      "change_today": 0.0
+    },
+    {
+      "symbol": "MSFT",
+      "shares": 50,
+      "avg_price": 295.0,
+      "current_price": 298.25,
+      "market_value": 14912.5,
+      "cost_basis": 14750.0,
+      "unrealized_pnl": 162.5,
+      "pnl_percent": 1.1016949152542372,
+      "sector": "Technology",
+      "change_today": 0.0
+    },
+    {
+      "symbol": "SPY",
+      "shares": 200,
+      "avg_price": 440.0,
+      "current_price": 442.9,
+      "market_value": 88580.0,
+      "cost_basis": 88000.0,
+      "unrealized_pnl": 580.0,
+      "pnl_percent": 0.6590909090909091,
+      "sector": "ETF",
+      "change_today": 0.0
+    },
+    {
+      "symbol": "JNJ",
+      "shares": 75,
+      "avg_price": 155.0,
+      "current_price": 160.94,
+      "market_value": 12070.5,
+      "cost_basis": 11625.0,
+      "unrealized_pnl": 445.5,
+      "pnl_percent": 3.832258064516129,
+      "sector": "Healthcare",
+      "change_today": 0.0
+    },
+    {
+      "symbol": "V",
+      "shares": 60,
+      "avg_price": 210.0,
+      "current_price": 216.47,
+      "market_value": 12988.2,
+      "cost_basis": 12600.0,
+      "unrealized_pnl": 388.2000000000007,
+      "pnl_percent": 3.0809523809523864,
+      "sector": "Financial",
+      "change_today": 0.0
+    }
+  ],
+  "summary": {
+    "total_value": 143536.2,
+    "total_cost": 141525.0,
+    "total_pnl": 2011.2000000000007,
+    "total_pnl_percent": 1.42109167991521,
+    "positions_count": 5
+  }
+}

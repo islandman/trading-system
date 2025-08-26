@@ -1,0 +1,44 @@
+{
+  "symbol": "AAPL",
+  "price": 149.85,
+  "change": 0.0,
+  "change_percent": 0.0,
+  "volume": 45014,
+  "high": 149.85,
+  "low": 149.85,
+  "open": 149.85,
+  "nbbo": {
+    "bid": 149.77,
+    "ask": 149.92,
+    "bid_sz": 383,
+    "ask_sz": 7871
+  },
+  "technical": {
+    "rsi": 50.0,
+    "macd": 0.0,
+    "macd_signal": 0.0,
+    "macd_histogram": 0.0,
+    "sma_20": 144.96242571344803,
+    "sma_50": 144.81324159405443,
+    "ema_12": 153.33082807245617,
+    "ema_26": 143.26624945091115,
+    "bollinger_upper": 0.0,
+    "bollinger_middle": 0.0,
+    "bollinger_lower": 0.0,
+    "atr": 1.0,
+    "volume_sma": 44889.459700191124
+  },
+  "fundamental": {
+    "pe_ratio": 22.71830546544061,
+    "pb_ratio": 15.787285832558242,
+    "dividend_yield": 0.6729908946264019,
+    "market_cap": 2448821915185.6226,
+    "eps": 6.424736873959909,
+    "revenue_growth": 13.680087948366726,
+    "profit_margin": 23.643294898083077,
+    "debt_to_equity": 1.1024409484772935,
+    "current_ratio": 1.3177554507079166,
+    "roe": 22.503020759981794,
+    "roa": 9.842137594250804
+  }
+}

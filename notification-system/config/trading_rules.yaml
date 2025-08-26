@@ -1,0 +1,105 @@
+rules:
+  # Order placed notifications
+  - name: "Order Placed"
+    event_type: "ORDER_PLACED"
+    conditions:
+      - field: "severity"
+        operator: "gte"
+        value: "low"
+    actions:
+      - type: "notify"
+        channels: ["inapp"]
+        template: "order.placed"
+        priority: "normal"
+
+  # Order executed notifications
+  - name: "Order Executed"
+    event_type: "ORDER_EXECUTED"
+    conditions:
+      - field: "severity"
+        operator: "gte"
+        value: "medium"
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email"]
+        template: "order.executed"
+        priority: "normal"
+
+  # Order filled notifications
+  - name: "Order Filled"
+    event_type: "ORDER_FILLED"
+    conditions:
+      - field: "severity"
+        operator: "gte"
+        value: "medium"
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email", "push"]
+        template: "order.filled"
+        priority: "high"
+
+  # Order canceled notifications
+  - name: "Order Canceled"
+    event_type: "ORDER_CANCELED"
+    conditions:
+      - field: "severity"
+        operator: "gte"
+        value: "low"
+    actions:
+      - type: "notify"
+        channels: ["inapp"]
+        template: "order.canceled"
+        priority: "normal"
+
+  # Order rejected notifications
+  - name: "Order Rejected"
+    event_type: "ORDER_REJECTED"
+    conditions:
+      - field: "severity"
+        operator: "eq"
+        value: "high"
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email", "sms"]
+        template: "order.rejected"
+        priority: "high"
+
+  # Risk violation notifications
+  - name: "Risk Violation"
+    event_type: "RISK_VIOLATION"
+    conditions:
+      - field: "severity"
+        operator: "eq"
+        value: "high"
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email", "sms", "voice"]
+        template: "risk.violation"
+        priority: "critical"
+        bypass_quiet_hours: true
+
+  # Large order notifications (over $10,000)
+  - name: "Large Order"
+    event_type: "ORDER_PLACED"
+    conditions:
+      - field: "payload.total_value"
+        operator: "gte"
+        value: 10000
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email"]
+        template: "order.large"
+        priority: "high"
+
+  # High-frequency trading detection
+  - name: "High Frequency Trading"
+    event_type: "ORDER_PLACED"
+    conditions:
+      - field: "payload.order_count_1min"
+        operator: "gte"
+        value: 10
+    actions:
+      - type: "notify"
+        channels: ["inapp", "email", "sms"]
+        template: "risk.high_frequency"
+        priority: "high"

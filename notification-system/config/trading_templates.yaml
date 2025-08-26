@@ -1,0 +1,141 @@
+templates:
+  order:
+    placed:
+      title: "Order Placed"
+      message: "Your {{side}} order for {{quantity}} {{symbol}} has been placed successfully."
+      email_subject: "Order Placed - {{symbol}}"
+      email_body: |
+        Your order has been placed successfully:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Order Type: {{order_type}}
+        {% if limit_price %}Limit Price: ${{limit_price}}{% endif %}
+        {% if stop_price %}Stop Price: ${{stop_price}}{% endif %}
+        
+        Order ID: {{order_id}}
+        Time: {{timestamp}}
+        
+        You will receive notifications when your order is executed.
+
+    executed:
+      title: "Order Executed"
+      message: "{{quantity}} {{symbol}} executed at ${{price}}"
+      email_subject: "Order Executed - {{symbol}}"
+      email_body: |
+        Your order has been executed:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Price: ${{price}}
+        Total Filled: {{total_filled}}
+        Remaining: {{leaves_qty}}
+        
+        Order ID: {{order_id}}
+        Execution Time: {{execution_time}}
+
+    filled:
+      title: "Order Filled"
+      message: "Your {{side}} order for {{quantity}} {{symbol}} has been completely filled at ${{avg_price}}"
+      email_subject: "Order Filled - {{symbol}}"
+      email_body: |
+        Your order has been completely filled:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Average Price: ${{avg_price}}
+        Total Value: ${{total_value}}
+        
+        Order ID: {{order_id}}
+        Fill Time: {{execution_time}}
+
+    canceled:
+      title: "Order Canceled"
+      message: "Your order for {{symbol}} has been canceled"
+      email_subject: "Order Canceled - {{symbol}}"
+      email_body: |
+        Your order has been canceled:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Filled: {{filled_qty}}
+        Canceled: {{leaves_qty}}
+        
+        Order ID: {{order_id}}
+        Reason: {{cancel_reason}}
+
+    rejected:
+      title: "Order Rejected"
+      message: "Your order for {{symbol}} was rejected: {{reject_reason}}"
+      email_subject: "Order Rejected - {{symbol}}"
+      email_body: |
+        Your order was rejected:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Order Type: {{order_type}}
+        Reason: {{reject_reason}}
+        
+        Order ID: {{order_id}}
+        
+        Please review your order and try again.
+
+    large:
+      title: "Large Order Alert"
+      message: "Large order placed: {{side}} {{quantity}} {{symbol}} for ${{total_value}}"
+      email_subject: "Large Order Alert - {{symbol}}"
+      email_body: |
+        A large order has been placed:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Total Value: ${{total_value}}
+        
+        Order ID: {{order_id}}
+        Time: {{timestamp}}
+
+  risk:
+    violation:
+      title: "Risk Violation Alert"
+      message: "Risk violation detected: {{violation_type}} for {{symbol}}"
+      email_subject: "Risk Violation Alert - {{symbol}}"
+      email_body: |
+        A risk violation has been detected:
+        
+        Symbol: {{symbol}}
+        Side: {{side}}
+        Quantity: {{quantity}}
+        Violation Type: {{violation_type}}
+        
+        {% if violation_type == "max_notional_exceeded" %}
+        Notional: ${{notional}}
+        Max Allowed: ${{max_notional}}
+        {% endif %}
+        
+        {% if violation_type == "price_collar_violation" %}
+        Price: ${{price}}
+        Last Price: ${{last_price}}
+        Collar: ±{{collar_pct}}%
+        {% endif %}
+        
+        Order ID: {{order_id}}
+        Time: {{timestamp}}
+
+    high_frequency:
+      title: "High Frequency Trading Alert"
+      message: "High frequency trading detected: {{order_count_1min}} orders in 1 minute"
+      email_subject: "High Frequency Trading Alert"
+      email_body: |
+        High frequency trading has been detected:
+        
+        Orders in 1 minute: {{order_count_1min}}
+        User ID: {{user_id}}
+        Time: {{timestamp}}
+        
+        This may indicate automated trading activity.
