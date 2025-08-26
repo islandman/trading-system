@@ -307,39 +307,39 @@ function AdvancedScanner({ marketData }) {
             {/* Conditional Fields Based on Order Type */}
             {(orderForm.order_type === 'LIMIT' || orderForm.order_type === 'STOP_LIMIT' || orderForm.order_type === 'TRAILING_STOP_LIMIT') && (
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Limit Price</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Limit Price</label>
                 <input 
                   type="number"
                   step="0.01"
                   value={orderForm.limit_price}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, limit_price: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '200px' }}
+                  style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '200px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                 />
               </div>
             )}
 
             {(orderForm.order_type === 'STOP' || orderForm.order_type === 'STOP_LIMIT') && (
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Stop Price</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Stop Price</label>
                 <input 
                   type="number"
                   step="0.01"
                   value={orderForm.stop_price}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, stop_price: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '200px' }}
+                  style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '200px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                 />
               </div>
             )}
 
             {(orderForm.order_type === 'TRAILING_STOP' || orderForm.order_type === 'TRAILING_STOP_LIMIT') && (
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Trailing Percent</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Trailing Percent</label>
                 <input 
                   type="number"
                   step="0.1"
                   value={orderForm.trailing_percent}
                   onChange={(e) => setOrderForm(prev => ({ ...prev, trailing_percent: e.target.value }))}
-                  style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '200px' }}
+                  style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '200px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                 />
               </div>
             )}
@@ -347,23 +347,23 @@ function AdvancedScanner({ marketData }) {
             {orderForm.order_type === 'OCO' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Limit Price</label>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Limit Price</label>
                   <input 
                     type="number"
                     step="0.01"
                     value={orderForm.limit_price}
                     onChange={(e) => setOrderForm(prev => ({ ...prev, limit_price: e.target.value }))}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                    style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Stop Price</label>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Stop Price</label>
                   <input 
                     type="number"
                     step="0.01"
                     value={orderForm.stop_price}
                     onChange={(e) => setOrderForm(prev => ({ ...prev, stop_price: e.target.value }))}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                    style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
@@ -372,23 +372,23 @@ function AdvancedScanner({ marketData }) {
             {orderForm.order_type === 'BRACKET' && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Profit Target</label>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Profit Target</label>
                   <input 
                     type="number"
                     step="0.01"
                     value={orderForm.profit_target}
                     onChange={(e) => setOrderForm(prev => ({ ...prev, profit_target: e.target.value }))}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                    style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Stop Loss</label>
+                  <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Stop Loss</label>
                   <input 
                     type="number"
                     step="0.01"
                     value={orderForm.stop_loss}
                     onChange={(e) => setOrderForm(prev => ({ ...prev, stop_loss: e.target.value }))}
-                    style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                    style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
@@ -396,11 +396,11 @@ function AdvancedScanner({ marketData }) {
 
             {/* Time in Force */}
             <div>
-              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Time in Force</label>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Time in Force</label>
               <select 
                 value={orderForm.tif}
                 onChange={(e) => setOrderForm(prev => ({ ...prev, tif: e.target.value }))}
-                style={{ padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '200px' }}
+                style={{ padding: '8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '200px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
               >
                 <option value="DAY">DAY</option>
                 <option value="GTC">GTC (Good Till Canceled)</option>
@@ -410,18 +410,20 @@ function AdvancedScanner({ marketData }) {
 
             {/* Notes */}
             <div>
-              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Notes</label>
+              <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Notes</label>
               <textarea 
                 value={orderForm.notes}
                 onChange={(e) => setOrderForm(prev => ({ ...prev, notes: e.target.value }))}
                 placeholder="Optional trading notes..."
                 style={{ 
                   padding: '8px', 
-                  border: '1px solid #d1d5db', 
+                  border: '1px solid var(--border-color)', 
                   borderRadius: '4px', 
                   width: '100%',
                   minHeight: '60px',
-                  resize: 'vertical'
+                  resize: 'vertical',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               />
             </div>
@@ -550,14 +552,14 @@ function AdvancedScanner({ marketData }) {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Market Cap Range</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Market Cap Range</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="number"
                     placeholder="Min"
                     value={filters.min_market_cap}
                     onChange={(e) => setFilters(prev => ({ ...prev, min_market_cap: parseFloat(e.target.value) || 0 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                   <span style={{ alignSelf: 'center' }}>-</span>
                   <input
@@ -565,20 +567,20 @@ function AdvancedScanner({ marketData }) {
                     placeholder="Max"
                     value={filters.max_market_cap}
                     onChange={(e) => setFilters(prev => ({ ...prev, max_market_cap: parseFloat(e.target.value) || 1000000000000 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>P/E Ratio Range</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>P/E Ratio Range</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="number"
                     placeholder="Min"
                     value={filters.min_pe}
                     onChange={(e) => setFilters(prev => ({ ...prev, min_pe: parseFloat(e.target.value) || 0 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                   <span style={{ alignSelf: 'center' }}>-</span>
                   <input
@@ -586,20 +588,20 @@ function AdvancedScanner({ marketData }) {
                     placeholder="Max"
                     value={filters.max_pe}
                     onChange={(e) => setFilters(prev => ({ ...prev, max_pe: parseFloat(e.target.value) || 100 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>RSI Range</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>RSI Range</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="number"
                     placeholder="Min"
                     value={filters.min_rsi}
                     onChange={(e) => setFilters(prev => ({ ...prev, min_rsi: parseFloat(e.target.value) || 0 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                   <span style={{ alignSelf: 'center' }}>-</span>
                   <input
@@ -607,30 +609,30 @@ function AdvancedScanner({ marketData }) {
                     placeholder="Max"
                     value={filters.max_rsi}
                     onChange={(e) => setFilters(prev => ({ ...prev, max_rsi: parseFloat(e.target.value) || 100 }))}
-                    style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '80px' }}
+                    style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '80px', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Min Volume</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Min Volume</label>
                 <input
                   type="number"
                   placeholder="Min Volume"
                   value={filters.min_volume}
                   onChange={(e) => setFilters(prev => ({ ...prev, min_volume: parseInt(e.target.value) || 0 }))}
-                  style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px' }}>Sectors (comma-separated)</label>
+                <label style={{ display: 'block', fontSize: '12px', marginBottom: '4px', color: 'var(--text-primary)' }}>Sectors (comma-separated)</label>
                 <input
                   type="text"
                   placeholder="Technology, Healthcare, Financial"
                   value={filters.sectors}
                   onChange={(e) => setFilters(prev => ({ ...prev, sectors: e.target.value }))}
-                  style={{ padding: '4px 8px', border: '1px solid #d1d5db', borderRadius: '4px', width: '100%' }}
+                  style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '4px', width: '100%', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
                 />
               </div>
             </div>
@@ -641,7 +643,7 @@ function AdvancedScanner({ marketData }) {
             <div style={{ textAlign: 'center', padding: '20px' }}>Scanning for stocks...</div>
           ) : (
             <div style={{ overflow: 'auto' }}>
-              <div style={{ marginBottom: '12px', fontSize: '14px', color: '#6b7280' }}>
+              <div style={{ marginBottom: '12px', fontSize: '14px', color: 'var(--text-secondary)' }}>
                 Found {scannerResults.length} stocks matching criteria
               </div>
               <table style={{
@@ -650,21 +652,21 @@ function AdvancedScanner({ marketData }) {
                 fontSize: '12px'
               }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f3f4f6' }}>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Symbol</th>
-                    <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Price</th>
-                    <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Market Cap</th>
-                    <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>P/E</th>
-                    <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>RSI</th>
-                    <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid #e5e7eb' }}>Volume</th>
-                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #e5e7eb' }}>Signals</th>
+                  <tr style={{ backgroundColor: 'var(--bg-tertiary)' }}>
+                                    <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>Symbol</th>
+                <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>Price</th>
+                <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>Market Cap</th>
+                <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>P/E</th>
+                <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>RSI</th>
+                <th style={{ padding: '8px', textAlign: 'right', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>Volume</th>
+                <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', color: 'var(--text-primary)' }}>Signals</th>
                   </tr>
                 </thead>
                 <tbody>
                   {scannerResults.map((result, index) => (
                     <tr key={index} style={{
-                      borderBottom: '1px solid #f3f4f6',
-                      backgroundColor: result.signals.length > 0 ? '#f0fdf4' : '#ffffff'
+                      borderBottom: '1px solid var(--border-light)',
+                      backgroundColor: result.signals.length > 0 ? 'var(--bg-secondary)' : 'var(--bg-primary)'
                     }}>
                       <td style={{ padding: '8px', fontWeight: 'bold' }}>{result.symbol}</td>
                       <td style={{ padding: '8px', textAlign: 'right' }}>
@@ -676,16 +678,16 @@ function AdvancedScanner({ marketData }) {
                       <td style={{ 
                         padding: '8px', 
                         textAlign: 'right',
-                        color: result.fundamental.pe_ratio < 15 ? '#22c55e' : 
-                               result.fundamental.pe_ratio > 50 ? '#ef4444' : '#6b7280'
+                                                color: result.fundamental.pe_ratio < 15 ? 'var(--accent-success)' :
+                        result.fundamental.pe_ratio > 50 ? 'var(--accent-danger)' : 'var(--text-secondary)'
                       }}>
                         {result.fundamental.pe_ratio.toFixed(1)}
                       </td>
                       <td style={{ 
                         padding: '8px', 
                         textAlign: 'right',
-                        color: result.technical.rsi > 70 ? '#ef4444' : 
-                               result.technical.rsi < 30 ? '#22c55e' : '#6b7280'
+                                                color: result.technical.rsi > 70 ? 'var(--accent-danger)' :
+                        result.technical.rsi < 30 ? 'var(--accent-success)' : 'var(--text-secondary)'
                       }}>
                         {result.technical.rsi.toFixed(1)}
                       </td>
@@ -697,7 +699,7 @@ function AdvancedScanner({ marketData }) {
                           {result.signals.map((signal, i) => (
                             <span key={i} style={{
                               padding: '2px 6px',
-                              backgroundColor: '#3b82f6',
+                              backgroundColor: 'var(--accent-primary)',
                               color: 'white',
                               borderRadius: '12px',
                               fontSize: '10px'

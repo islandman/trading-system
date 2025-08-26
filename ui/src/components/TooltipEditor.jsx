@@ -17,12 +17,12 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
     return text
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/`(.*?)`/g, '<code style="background: #f1f5f9; padding: 2px 4px; border-radius: 3px; font-family: monospace;">$1</code>')
+      .replace(/`(.*?)`/g, '<code style="background: var(--bg-tertiary); padding: 2px 4px; border-radius: 3px; font-family: monospace; color: var(--text-primary);">$1</code>')
       .replace(/\n/g, '<br>')
-      .replace(/^### (.*$)/gim, '<h3 style="margin: 8px 0 4px 0; font-size: 14px; color: #1e40af;">$1</h3>')
-      .replace(/^## (.*$)/gim, '<h2 style="margin: 12px 0 6px 0; font-size: 16px; color: #1e293b;">$1</h2>')
-      .replace(/^# (.*$)/gim, '<h1 style="margin: 16px 0 8px 0; font-size: 18px; color: #0f172a;">$1</h1>')
-      .replace(/^- (.*$)/gim, '<li style="margin: 2px 0;">$1</li>')
+      .replace(/^### (.*$)/gim, '<h3 style="margin: 8px 0 4px 0; font-size: 14px; color: var(--accent-primary);">$1</h3>')
+      .replace(/^## (.*$)/gim, '<h2 style="margin: 12px 0 6px 0; font-size: 16px; color: var(--text-primary);">$1</h2>')
+      .replace(/^# (.*$)/gim, '<h1 style="margin: 16px 0 8px 0; font-size: 18px; color: var(--text-primary);">$1</h1>')
+      .replace(/^- (.*$)/gim, '<li style="margin: 2px 0; color: var(--text-primary);">$1</li>')
       .replace(/(<li.*<\/li>)/g, '<ul style="margin: 4px 0; padding-left: 16px;">$1</ul>')
   }
 
@@ -50,13 +50,13 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
         alignItems: 'center',
         marginBottom: '20px'
       }}>
-        <h3 style={{ margin: 0 }}>📝 Edit Tooltip</h3>
+        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>📝 Edit Tooltip</h3>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             onClick={() => setPreviewMode(!previewMode)}
             style={{
               padding: '8px 16px',
-              backgroundColor: previewMode ? '#10b981' : '#6b7280',
+              backgroundColor: previewMode ? 'var(--accent-success)' : 'var(--text-secondary)',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -70,7 +70,7 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
             onClick={onCancel}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#6b7280',
+              backgroundColor: 'var(--text-secondary)',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -85,7 +85,7 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
             disabled={!title.trim() || !content.trim()}
             style={{
               padding: '8px 16px',
-              backgroundColor: (!title.trim() || !content.trim()) ? '#9ca3af' : '#10b981',
+              backgroundColor: (!title.trim() || !content.trim()) ? 'var(--text-muted)' : 'var(--accent-success)',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -99,7 +99,7 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
       </div>
 
       <div style={{ marginBottom: '16px' }}>
-        <div style={{ fontSize: '14px', color: '#6b7280', marginBottom: '4px' }}>
+        <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
           Category: {getCategoryDisplayName(category)} • Key: {key}
         </div>
       </div>
@@ -107,7 +107,7 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
       {!previewMode ? (
         <div style={{ display: 'grid', gap: '16px' }}>
           <div>
-            <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
               Title *
             </label>
             <input
@@ -118,15 +118,17 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
               style={{
                 width: '100%',
                 padding: '12px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
-                fontSize: '14px'
+                fontSize: '14px',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)'
               }}
             />
           </div>
 
           <div>
-            <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+            <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
               Content * (Markdown supported)
             </label>
             <textarea
@@ -137,23 +139,25 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
               style={{
                 width: '100%',
                 padding: '12px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
                 fontSize: '14px',
                 fontFamily: 'monospace',
-                resize: 'vertical'
+                resize: 'vertical',
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)'
               }}
             />
           </div>
 
           <div style={{
             padding: '12px',
-            backgroundColor: '#f8fafc',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '4px',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border-color)'
           }}>
-            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: '#374151' }}>📖 Markdown Guide</h4>
-            <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.4' }}>
+            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px', color: 'var(--text-primary)' }}>📖 Markdown Guide</h4>
+            <div style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
               <div><strong>**bold text**</strong> - Bold formatting</div>
               <div><em>*italic text*</em> - Italic formatting</div>
               <div><code>`code`</code> - Inline code</div>
@@ -168,12 +172,12 @@ const TooltipEditor = ({ category, key, initialContent, onSave, onCancel }) => {
       ) : (
         <div style={{
           padding: '16px',
-          backgroundColor: '#1e293b',
-          color: '#f8fafc',
+          backgroundColor: 'var(--bg-secondary)',
+          color: 'var(--text-primary)',
           borderRadius: '8px',
-          border: '1px solid #334155'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 12px 0', color: '#f8fafc' }}>{title || 'Preview Title'}</h4>
+          <h4 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>{title || 'Preview Title'}</h4>
           <div 
             dangerouslySetInnerHTML={{ 
               __html: renderMarkdown(content || 'Preview content will appear here...') 

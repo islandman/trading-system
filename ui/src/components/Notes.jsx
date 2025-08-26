@@ -7,11 +7,11 @@ function Notes() {
   const [filterCategory, setFilterCategory] = useState('all')
 
   const categories = [
-    { value: 'general', label: 'General', color: '#3b82f6' },
-    { value: 'analysis', label: 'Analysis', color: '#10b981' },
-    { value: 'strategy', label: 'Strategy', color: '#f59e0b' },
-    { value: 'lessons', label: 'Lessons', color: '#ef4444' },
-    { value: 'ideas', label: 'Ideas', color: '#8b5cf6' }
+    { value: 'general', label: 'General', color: 'var(--accent-primary)' },
+    { value: 'analysis', label: 'Analysis', color: 'var(--accent-success)' },
+    { value: 'strategy', label: 'Strategy', color: 'var(--accent-warning)' },
+    { value: 'lessons', label: 'Lessons', color: 'var(--accent-danger)' },
+    { value: 'ideas', label: 'Ideas', color: 'var(--accent-primary)' }
   ]
 
   // Load notes from localStorage
@@ -63,11 +63,11 @@ function Notes() {
       <div style={{
         marginBottom: '24px',
         padding: '16px',
-        backgroundColor: '#f8fafc',
+        backgroundColor: 'var(--bg-secondary)',
         borderRadius: '8px',
-        border: '1px solid #e2e8f0'
+        border: '1px solid var(--border-color)'
       }}>
-        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px' }}>Add New Note</h4>
+        <h4 style={{ margin: '0 0 12px 0', fontSize: '16px', color: 'var(--text-primary)' }}>Add New Note</h4>
         <div style={{ display: 'grid', gap: '12px' }}>
           <div style={{ display: 'flex', gap: '12px' }}>
             <select
@@ -75,9 +75,10 @@ function Notes() {
               onChange={(e) => setSelectedCategory(e.target.value)}
               style={{
                 padding: '8px 12px',
-                border: '1px solid #d1d5db',
+                border: '1px solid var(--border-color)',
                 borderRadius: '4px',
-                backgroundColor: 'white'
+                backgroundColor: 'var(--bg-primary)',
+                color: 'var(--text-primary)'
               }}
             >
               {categories.map(cat => (
@@ -89,7 +90,7 @@ function Notes() {
               disabled={!newNote.trim()}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#3b82f6',
+                backgroundColor: 'var(--accent-primary)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '4px',
@@ -108,10 +109,12 @@ function Notes() {
               width: '100%',
               minHeight: '100px',
               padding: '12px',
-              border: '1px solid #d1d5db',
+              border: '1px solid var(--border-color)',
               borderRadius: '4px',
               resize: 'vertical',
-              fontFamily: 'inherit'
+              fontFamily: 'inherit',
+              backgroundColor: 'var(--bg-primary)',
+              color: 'var(--text-primary)'
             }}
           />
         </div>
@@ -128,8 +131,8 @@ function Notes() {
           onClick={() => setFilterCategory('all')}
           style={{
             padding: '6px 12px',
-            backgroundColor: filterCategory === 'all' ? '#3b82f6' : '#e2e8f0',
-            color: filterCategory === 'all' ? 'white' : '#374151',
+            backgroundColor: filterCategory === 'all' ? 'var(--accent-primary)' : 'var(--bg-tertiary)',
+            color: filterCategory === 'all' ? 'white' : 'var(--text-primary)',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer',
@@ -144,8 +147,8 @@ function Notes() {
             onClick={() => setFilterCategory(cat.value)}
             style={{
               padding: '6px 12px',
-              backgroundColor: filterCategory === cat.value ? cat.color : '#e2e8f0',
-              color: filterCategory === cat.value ? 'white' : '#374151',
+              backgroundColor: filterCategory === cat.value ? cat.color : 'var(--bg-tertiary)',
+              color: filterCategory === cat.value ? 'white' : 'var(--text-primary)',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
@@ -163,10 +166,10 @@ function Notes() {
           <div style={{
             padding: '40px',
             textAlign: 'center',
-            color: '#6b7280',
-            backgroundColor: '#f9fafb',
+            color: 'var(--text-secondary)',
+            backgroundColor: 'var(--bg-secondary)',
             borderRadius: '8px',
-            border: '2px dashed #d1d5db'
+            border: '2px dashed var(--border-color)'
           }}>
             No notes found. Add your first trading note above!
           </div>
@@ -178,9 +181,9 @@ function Notes() {
                 key={note.id}
                 style={{
                   padding: '16px',
-                  backgroundColor: '#ffffff',
+                  backgroundColor: 'var(--bg-primary)',
                   borderRadius: '8px',
-                  border: '1px solid #e5e7eb',
+                  border: '1px solid var(--border-color)',
                   position: 'relative'
                 }}
               >
@@ -209,7 +212,7 @@ function Notes() {
                     onClick={() => deleteNote(note.id)}
                     style={{
                       padding: '4px 8px',
-                      backgroundColor: '#ef4444',
+                      backgroundColor: 'var(--accent-danger)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '4px',

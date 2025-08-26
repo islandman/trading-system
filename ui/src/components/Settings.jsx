@@ -184,7 +184,7 @@ const Settings = ({ settings, onSettingsChange }) => {
           onClick={resetToDefaults}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#6b7280',
+            backgroundColor: 'var(--text-secondary)',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
@@ -211,13 +211,14 @@ const Settings = ({ settings, onSettingsChange }) => {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-primary)',
             padding: '24px',
             borderRadius: '8px',
             width: '80%',
             maxWidth: '800px',
             maxHeight: '80vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            border: '1px solid var(--border-color)'
           }}>
             <TooltipEditor
               category={editingTooltip.category}
@@ -245,13 +246,14 @@ const Settings = ({ settings, onSettingsChange }) => {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-primary)',
             padding: '24px',
             borderRadius: '8px',
             width: '80%',
             maxWidth: '800px',
             maxHeight: '80vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            border: '1px solid var(--border-color)'
           }}>
             <TooltipEditor
               category={tooltipCategory}
@@ -282,13 +284,14 @@ const Settings = ({ settings, onSettingsChange }) => {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-primary)',
             padding: '24px',
             borderRadius: '8px',
             width: '90%',
             maxWidth: '1200px',
             maxHeight: '90vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            border: '1px solid var(--border-color)'
           }}>
             <WikiEditor
               wikiKey={editingWiki}
@@ -315,13 +318,14 @@ const Settings = ({ settings, onSettingsChange }) => {
           zIndex: 1000
         }}>
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-primary)',
             padding: '24px',
             borderRadius: '8px',
             width: '90%',
             maxWidth: '1200px',
             maxHeight: '90vh',
-            overflow: 'auto'
+            overflow: 'auto',
+            border: '1px solid var(--border-color)'
           }}>
             <WikiEditor
               wikiKey={newWikiKey}
@@ -341,18 +345,18 @@ const Settings = ({ settings, onSettingsChange }) => {
         {/* Tooltip Settings */}
         <div style={{
           padding: '16px',
-          backgroundColor: '#f8fafc',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '8px',
-          border: '1px solid #e2e8f0'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>💡 Tooltip Configuration</h4>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>💡 Tooltip Configuration</h4>
           
           {/* Tooltip Management */}
           <div style={{ marginBottom: '24px' }}>
-            <h5 style={{ margin: '0 0 12px 0', color: '#374151' }}>📝 Tooltip Content Management</h5>
+            <h5 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>📝 Tooltip Content Management</h5>
             
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                 Category
               </label>
               <select
@@ -361,9 +365,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                 style={{
                   width: '100%',
                   padding: '8px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               >
                 <option value="technical">Technical Analysis</option>
@@ -380,7 +386,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               alignItems: 'flex-end'
             }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                   New Tooltip Key
                 </label>
                 <input
@@ -391,9 +397,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                   style={{
                     width: '100%',
                     padding: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
@@ -406,7 +414,7 @@ const Settings = ({ settings, onSettingsChange }) => {
                 disabled={!newTooltipKey.trim()}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: !newTooltipKey.trim() ? '#9ca3af' : '#10b981',
+                  backgroundColor: !newTooltipKey.trim() ? 'var(--text-muted)' : 'var(--accent-success)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -427,42 +435,27 @@ const Settings = ({ settings, onSettingsChange }) => {
                 return (
                   <div key={key} style={{
                     padding: '12px',
-                    backgroundColor: isCustom ? '#fef3c7' : '#ffffff',
-                    border: `1px solid ${isCustom ? '#fde68a' : '#e2e8f0'}`,
+                    backgroundColor: isCustom ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                    border: `1px solid ${isCustom ? 'var(--border-color)' : 'var(--border-color)'}`,
                     borderRadius: '6px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#374151' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--text-primary)' }}>
                         {content.title || key}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                         {isCustom ? 'Custom' : 'Default'} • {content.content.substring(0, 100)}...
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => setEditingTooltip({ category: tooltipCategory, key })}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        {isCustom ? 'Edit' : 'Customize'}
-                      </button>
-                      {isCustom && (
-                        <button
-                          onClick={() => deleteCustomTooltip(tooltipCategory, key)}
+                                              <button
+                          onClick={() => setEditingTooltip({ category: tooltipCategory, key })}
                           style={{
                             padding: '6px 12px',
-                            backgroundColor: '#ef4444',
+                            backgroundColor: 'var(--accent-primary)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -470,9 +463,24 @@ const Settings = ({ settings, onSettingsChange }) => {
                             fontSize: '12px'
                           }}
                         >
-                          Delete
+                          {isCustom ? 'Edit' : 'Customize'}
                         </button>
-                      )}
+                        {isCustom && (
+                          <button
+                            onClick={() => deleteCustomTooltip(tooltipCategory, key)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: 'var(--accent-danger)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
                     </div>
                   </div>
                 )
@@ -482,7 +490,7 @@ const Settings = ({ settings, onSettingsChange }) => {
           
           <div style={{ display: 'grid', gap: '12px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <label style={{ fontSize: '14px', color: '#374151' }}>Enable Tooltips</label>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Enable Tooltips</label>
               <input
                 type="checkbox"
                 checked={localSettings.tooltips?.enabled ?? true}
@@ -496,7 +504,7 @@ const Settings = ({ settings, onSettingsChange }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                   Show Delay (ms)
                 </label>
                 <input
@@ -511,15 +519,17 @@ const Settings = ({ settings, onSettingsChange }) => {
                   style={{
                     width: '100%',
                     padding: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
               
               <div>
-                <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                   Max Width (px)
                 </label>
                 <input
@@ -534,9 +544,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                   style={{
                     width: '100%',
                     padding: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
@@ -544,7 +556,7 @@ const Settings = ({ settings, onSettingsChange }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
-                <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                   Position
                 </label>
                 <select
@@ -556,9 +568,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                   style={{
                     width: '100%',
                     padding: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
                   }}
                 >
                   <option value="top">Top</option>
@@ -569,7 +583,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Show Arrow</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Show Arrow</label>
                 <input
                   type="checkbox"
                   checked={localSettings.tooltips?.showArrow ?? true}
@@ -587,15 +601,15 @@ const Settings = ({ settings, onSettingsChange }) => {
         {/* Market Data Settings */}
         <div style={{
           padding: '16px',
-          backgroundColor: '#f0fdf4',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '8px',
-          border: '1px solid #bbf7d0'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 16px 0', color: '#166534' }}>📊 Market Data Settings</h4>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>📊 Market Data Settings</h4>
           
           <div style={{ display: 'grid', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                 Update Interval (ms)
               </label>
               <input
@@ -611,16 +625,18 @@ const Settings = ({ settings, onSettingsChange }) => {
                 style={{
                   width: '100%',
                   padding: '8px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               />
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Show Volume</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Show Volume</label>
                 <input
                   type="checkbox"
                   checked={localSettings.marketData?.showVolume ?? true}
@@ -633,7 +649,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Show Bid/Ask</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Show Bid/Ask</label>
                 <input
                   type="checkbox"
                   checked={localSettings.marketData?.showBidAsk ?? true}
@@ -651,15 +667,15 @@ const Settings = ({ settings, onSettingsChange }) => {
         {/* Trading Settings */}
         <div style={{
           padding: '16px',
-          backgroundColor: '#eff6ff',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '8px',
-          border: '1px solid #bfdbfe'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 16px 0', color: '#1e40af' }}>💰 Trading Settings</h4>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>💰 Trading Settings</h4>
           
           <div style={{ display: 'grid', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                 Default Order Size
               </label>
               <input
@@ -674,16 +690,18 @@ const Settings = ({ settings, onSettingsChange }) => {
                 style={{
                   width: '100%',
                   padding: '8px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               />
             </div>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Confirm Orders</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Confirm Orders</label>
                 <input
                   type="checkbox"
                   checked={localSettings.trading?.confirmOrders ?? true}
@@ -696,7 +714,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Auto Refresh</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Auto Refresh</label>
                 <input
                   type="checkbox"
                   checked={localSettings.trading?.autoRefresh ?? true}
@@ -714,17 +732,17 @@ const Settings = ({ settings, onSettingsChange }) => {
         {/* Wiki Management */}
         <div style={{
           padding: '16px',
-          backgroundColor: '#fdf2f8',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '8px',
-          border: '1px solid #fbcfe8'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 16px 0', color: '#be185d' }}>📚 Wiki Content Management</h4>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>📚 Wiki Content Management</h4>
           
           <div style={{ marginBottom: '24px' }}>
-            <h5 style={{ margin: '0 0 12px 0', color: '#374151' }}>📝 Strategy Wiki Editor</h5>
+            <h5 style={{ margin: '0 0 12px 0', color: 'var(--text-primary)' }}>📝 Strategy Wiki Editor</h5>
             
             <div style={{ marginBottom: '12px' }}>
-              <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                 Wiki Section
               </label>
               <select
@@ -733,9 +751,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                 style={{
                   width: '100%',
                   padding: '8px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               >
                 <option value="trading_strategies">Trading Strategies</option>
@@ -753,7 +773,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               alignItems: 'flex-end'
             }}>
               <div style={{ flex: 1 }}>
-                <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                   New Wiki Key
                 </label>
                 <input
@@ -764,9 +784,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                   style={{
                     width: '100%',
                     padding: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid var(--border-color)',
                     borderRadius: '4px',
-                    fontSize: '14px'
+                    fontSize: '14px',
+                    backgroundColor: 'var(--bg-primary)',
+                    color: 'var(--text-primary)'
                   }}
                 />
               </div>
@@ -779,7 +801,7 @@ const Settings = ({ settings, onSettingsChange }) => {
                 disabled={!newWikiKey.trim()}
                 style={{
                   padding: '8px 16px',
-                  backgroundColor: !newWikiKey.trim() ? '#9ca3af' : '#ec4899',
+                  backgroundColor: !newWikiKey.trim() ? 'var(--text-muted)' : 'var(--accent-primary)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '4px',
@@ -800,42 +822,27 @@ const Settings = ({ settings, onSettingsChange }) => {
                 return (
                   <div key={key} style={{
                     padding: '12px',
-                    backgroundColor: isCustom ? '#fdf2f8' : '#ffffff',
-                    border: `1px solid ${isCustom ? '#fbcfe8' : '#e2e8f0'}`,
+                    backgroundColor: isCustom ? 'var(--bg-secondary)' : 'var(--bg-primary)',
+                    border: `1px solid ${isCustom ? 'var(--border-color)' : 'var(--border-color)'}`,
                     borderRadius: '6px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: '#374151' }}>
+                      <div style={{ fontWeight: 'bold', fontSize: '14px', color: 'var(--text-primary)' }}>
                         {content.title || key}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '4px' }}>
                         {isCustom ? 'Custom' : 'Default'} • {content.content.substring(0, 100)}...
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => setEditingWiki(key)}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#ec4899',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '12px'
-                        }}
-                      >
-                        {isCustom ? 'Edit' : 'Customize'}
-                      </button>
-                      {isCustom && (
-                        <button
-                          onClick={() => deleteCustomWiki(key)}
+                                              <button
+                          onClick={() => setEditingWiki(key)}
                           style={{
                             padding: '6px 12px',
-                            backgroundColor: '#ef4444',
+                            backgroundColor: 'var(--accent-primary)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '4px',
@@ -843,9 +850,24 @@ const Settings = ({ settings, onSettingsChange }) => {
                             fontSize: '12px'
                           }}
                         >
-                          Delete
+                          {isCustom ? 'Edit' : 'Customize'}
                         </button>
-                      )}
+                        {isCustom && (
+                          <button
+                            onClick={() => deleteCustomWiki(key)}
+                            style={{
+                              padding: '6px 12px',
+                              backgroundColor: 'var(--accent-danger)',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
                     </div>
                   </div>
                 )
@@ -857,15 +879,15 @@ const Settings = ({ settings, onSettingsChange }) => {
         {/* Display Settings */}
         <div style={{
           padding: '16px',
-          backgroundColor: '#fef3c7',
+          backgroundColor: 'var(--bg-secondary)',
           borderRadius: '8px',
-          border: '1px solid #fde68a'
+          border: '1px solid var(--border-color)'
         }}>
-          <h4 style={{ margin: '0 0 16px 0', color: '#92400e' }}>🎨 Display Settings</h4>
+          <h4 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>🎨 Display Settings</h4>
           
           <div style={{ display: 'grid', gap: '12px' }}>
             <div>
-              <label style={{ fontSize: '14px', color: '#374151', display: 'block', marginBottom: '4px' }}>
+              <label style={{ fontSize: '14px', color: 'var(--text-primary)', display: 'block', marginBottom: '4px' }}>
                 Theme
               </label>
               <select
@@ -877,9 +899,11 @@ const Settings = ({ settings, onSettingsChange }) => {
                 style={{
                   width: '100%',
                   padding: '8px',
-                  border: '1px solid #d1d5db',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
-                  fontSize: '14px'
+                  fontSize: '14px',
+                  backgroundColor: 'var(--bg-primary)',
+                  color: 'var(--text-primary)'
                 }}
               >
                 <option value="light">Light</option>
@@ -890,7 +914,7 @@ const Settings = ({ settings, onSettingsChange }) => {
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Compact Mode</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Compact Mode</label>
                 <input
                   type="checkbox"
                   checked={localSettings.display?.compactMode ?? false}
@@ -903,7 +927,7 @@ const Settings = ({ settings, onSettingsChange }) => {
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <label style={{ fontSize: '14px', color: '#374151' }}>Show Animations</label>
+                <label style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Show Animations</label>
                 <input
                   type="checkbox"
                   checked={localSettings.display?.showAnimations ?? true}

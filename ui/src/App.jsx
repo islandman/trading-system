@@ -1050,6 +1050,11 @@ function TechnicalScanner({ marketData }) {
         
         <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
           Showing {filteredResults.length} of {scannerResults.length} results
+          {filteredResults.length > 0 && (
+            <span style={{ marginLeft: '8px' }}>
+              (Scrollable list - {Math.min(filteredResults.length, 20)} items visible)
+            </span>
+          )}
         </div>
       </div>
 
@@ -1085,7 +1090,12 @@ function TechnicalScanner({ marketData }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-primary)' }}>Scanning for technical signals...</div>
       ) : (
-        <div style={{ overflow: 'auto' }}>
+        <div style={{ 
+          overflow: 'auto',
+          maxHeight: '500px',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px'
+        }}>
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -1385,6 +1395,11 @@ function FundamentalScanner({ marketData }) {
         
         <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
           Showing {filteredResults.length} of {scannerResults.length} results
+          {filteredResults.length > 0 && (
+            <span style={{ marginLeft: '8px' }}>
+              (Scrollable list - {Math.min(filteredResults.length, 20)} items visible)
+            </span>
+          )}
         </div>
       </div>
 
@@ -1427,7 +1442,12 @@ function FundamentalScanner({ marketData }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-primary)' }}>Scanning for fundamental signals...</div>
       ) : (
-        <div style={{ overflow: 'auto' }}>
+        <div style={{ 
+          overflow: 'auto',
+          maxHeight: '500px',
+          border: '1px solid var(--border-color)',
+          borderRadius: '4px'
+        }}>
           <table style={{
             width: '100%',
             borderCollapse: 'collapse',
@@ -1666,6 +1686,8 @@ function App() {
   const [selectedSymbol, setSelectedSymbol] = useState('AAPL')
   const [activeTab, setActiveTab] = useState('trading')
   const [learningSubTab, setLearningSubTab] = useState('overview')
+  const [marketDataPage, setMarketDataPage] = useState(1)
+  const marketDataPerPage = 20
   
   // Settings state
   const [settings, setSettings] = useState(() => {
@@ -1744,6 +1766,13 @@ function App() {
       .replace(/(<tr.*<\/tr>)/g, '<table style="border-collapse: collapse; width: 100%; margin: 16px 0; background: white;">$1</table>')
   }
   
+  // Market Data pagination logic
+  const marketDataEntries = Object.entries(marketData)
+  const totalPages = Math.ceil(marketDataEntries.length / marketDataPerPage)
+  const startIndex = (marketDataPage - 1) * marketDataPerPage
+  const endIndex = startIndex + marketDataPerPage
+  const currentPageData = marketDataEntries.slice(startIndex, endIndex)
+
   const fetchStats = async () => {
     setStatsLoading(true)
     try {
@@ -1884,9 +1913,25 @@ function App() {
                   borderRadius: '8px',
                   backgroundColor: 'var(--bg-primary)'
                 }}>
-                  <h3 style={{ margin: '0 0 16px 0', color: 'var(--text-primary)' }}>Market Data</h3>
-                  <div style={{ display: 'grid', gap: '8px' }}>
-                    {Object.entries(marketData).map(([symbol, data]) => (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '16px'
+                  }}>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Market Data</h3>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      Showing {startIndex + 1}-{Math.min(endIndex, marketDataEntries.length)} of {marketDataEntries.length} symbols
+                    </div>
+                  </div>
+                  
+                  <div style={{ 
+                    display: 'grid', 
+                    gap: '8px',
+                    maxHeight: '600px',
+                    overflowY: 'auto'
+                  }}>
+                    {currentPageData.map(([symbol, data]) => (
                       <MarketDataWidget 
                         key={symbol}
                         symbol={symbol}
@@ -1895,6 +1940,54 @@ function App() {
                       />
                     ))}
                   </div>
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginTop: '16px',
+                      paddingTop: '16px',
+                      borderTop: '1px solid var(--border-color)'
+                    }}>
+                      <button
+                        onClick={() => setMarketDataPage(prev => Math.max(1, prev - 1))}
+                        disabled={marketDataPage === 1}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: marketDataPage === 1 ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: marketDataPage === 1 ? 'not-allowed' : 'pointer',
+                          opacity: marketDataPage === 1 ? 0.6 : 1
+                        }}
+                      >
+                        Previous
+                      </button>
+                      
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                        Page {marketDataPage} of {totalPages}
+                      </div>
+                      
+                      <button
+                        onClick={() => setMarketDataPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={marketDataPage === totalPages}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: marketDataPage === totalPages ? 'var(--bg-tertiary)' : 'var(--accent-primary)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: marketDataPage === totalPages ? 'not-allowed' : 'pointer',
+                          opacity: marketDataPage === totalPages ? 0.6 : 1
+                        }}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               
